@@ -43,7 +43,7 @@ namespace WindowTopMost
 
                 if (IsWindowVisible(hWnd) && string.IsNullOrEmpty(strTitle) == false)
                 {
-                    WindowList.Add(new ProcessHnd() { name = strTitle, hnd = FindWindowByCaption(IntPtr.Zero, strTitle) });
+                    WindowList.Add(new ProcessHnd() { name = strTitle, hnd = hWnd });
                 }
                 return true;
             };
@@ -250,7 +250,7 @@ namespace WindowTopMost
                 GetWindowPlacement(WindowList[S].hnd, ref P);
             if (!success)
             {
-                MessageBox.Show("无法获取进程信息。");
+                MessageBox.Show("无法获取窗口信息。");
                 return;
             }
             if (!SetWindowPos(WindowList[S].hnd, (IntPtr)hnd, R.Left, R.Top, R.Right - R.Left, R.Bottom - R.Top, P.flags))
