@@ -34,21 +34,27 @@
             this.btnGetHandle = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
             this.btnCancelTopmost = new System.Windows.Forms.Button();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.panel2 = new System.Windows.Forms.Panel();
+            this.panel1.SuspendLayout();
+            this.panel2.SuspendLayout();
             this.SuspendLayout();
             // 
             // lstWindow
             // 
+            this.lstWindow.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.lstWindow.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lstWindow.FormattingEnabled = true;
             this.lstWindow.ItemHeight = 17;
-            this.lstWindow.Location = new System.Drawing.Point(15, 14);
+            this.lstWindow.Location = new System.Drawing.Point(0, 0);
             this.lstWindow.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.lstWindow.Name = "lstWindow";
-            this.lstWindow.Size = new System.Drawing.Size(513, 378);
+            this.lstWindow.Size = new System.Drawing.Size(546, 389);
             this.lstWindow.TabIndex = 1;
             // 
             // btnRefresh
             // 
-            this.btnRefresh.Location = new System.Drawing.Point(15, 404);
+            this.btnRefresh.Location = new System.Drawing.Point(15, 16);
             this.btnRefresh.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.btnRefresh.Name = "btnRefresh";
             this.btnRefresh.Size = new System.Drawing.Size(109, 33);
@@ -59,7 +65,7 @@
             // 
             // btnGetHandle
             // 
-            this.btnGetHandle.Location = new System.Drawing.Point(414, 404);
+            this.btnGetHandle.Location = new System.Drawing.Point(447, 16);
             this.btnGetHandle.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.btnGetHandle.Name = "btnGetHandle";
             this.btnGetHandle.Size = new System.Drawing.Size(87, 33);
@@ -71,7 +77,7 @@
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(168, 404);
+            this.button1.Location = new System.Drawing.Point(162, 16);
             this.button1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(117, 33);
@@ -82,7 +88,7 @@
             // 
             // btnCancelTopmost
             // 
-            this.btnCancelTopmost.Location = new System.Drawing.Point(291, 404);
+            this.btnCancelTopmost.Location = new System.Drawing.Point(285, 16);
             this.btnCancelTopmost.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.btnCancelTopmost.Name = "btnCancelTopmost";
             this.btnCancelTopmost.Size = new System.Drawing.Size(117, 33);
@@ -91,22 +97,43 @@
             this.btnCancelTopmost.UseVisualStyleBackColor = true;
             this.btnCancelTopmost.Click += new System.EventHandler(this.btnCancelTopmost_Click);
             // 
+            // panel1
+            // 
+            this.panel1.Controls.Add(this.btnCancelTopmost);
+            this.panel1.Controls.Add(this.btnGetHandle);
+            this.panel1.Controls.Add(this.button1);
+            this.panel1.Controls.Add(this.btnRefresh);
+            this.panel1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.panel1.Location = new System.Drawing.Point(0, 389);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(546, 62);
+            this.panel1.TabIndex = 6;
+            // 
+            // panel2
+            // 
+            this.panel2.BackColor = System.Drawing.SystemColors.Window;
+            this.panel2.Controls.Add(this.lstWindow);
+            this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel2.Location = new System.Drawing.Point(0, 0);
+            this.panel2.Name = "panel2";
+            this.panel2.Size = new System.Drawing.Size(546, 389);
+            this.panel2.TabIndex = 7;
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(546, 451);
-            this.Controls.Add(this.btnCancelTopmost);
-            this.Controls.Add(this.button1);
-            this.Controls.Add(this.btnGetHandle);
-            this.Controls.Add(this.btnRefresh);
-            this.Controls.Add(this.lstWindow);
+            this.Controls.Add(this.panel2);
+            this.Controls.Add(this.panel1);
             this.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.Name = "frmMain";
             this.Text = "Window Top-Mostify";
             this.Load += new System.EventHandler(this.frmMain_Load);
+            this.panel1.ResumeLayout(false);
+            this.panel2.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -117,6 +144,8 @@
         private System.Windows.Forms.Button btnGetHandle;
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.Button btnCancelTopmost;
+        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.Panel panel2;
     }
 }
 
