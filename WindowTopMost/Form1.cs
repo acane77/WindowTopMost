@@ -19,17 +19,6 @@ namespace WindowTopMost
             InitializeComponent();
         }
 
-        struct ProcessHnd
-        {
-            public IntPtr hnd;
-            public string name;
-
-            public override string ToString() 
-            {
-                return name + " [" + hnd + "]";
-            }
-        }
-
         List<ProcessHnd> WindowList = new List<ProcessHnd>();
 
         bool RefreshWindowList()
@@ -43,7 +32,7 @@ namespace WindowTopMost
 
                 if (IsWindowVisible(hWnd) && string.IsNullOrEmpty(strTitle) == false)
                 {
-                    WindowList.Add(new ProcessHnd() { name = strTitle, hnd = hWnd });
+                    WindowList.Add(new ProcessHnd() { WindowName = strTitle, Handle = hWnd });
                 }
                 return true;
             };
@@ -68,6 +57,7 @@ namespace WindowTopMost
         private void btnRefresh_Click(object sender, EventArgs e)
         {
             UpdateProcessList();
+            btnCancelTopmost.Enabled = btnTopMost.Enabled = false;
         }
 
         /// <summary>
@@ -246,14 +236,14 @@ namespace WindowTopMost
                 return;
             RECT R = new RECT();
             WINDOWPLACEMENT P = new WINDOWPLACEMENT();
-            bool success = GetWindowRect(WindowList[S].hnd, out R) &&
-                GetWindowPlacement(WindowList[S].hnd, ref P);
+            bool success = GetWindowRect(WindowList[S].Handle, out R) &&
+                GetWindowPlacement(WindowList[S].Handle, ref P);
             if (!success)
             {
                 MessageBox.Show("无法获取窗口信息。");
                 return;
             }
-            if (!SetWindowPos(WindowList[S].hnd, (IntPtr)hnd, R.Left, R.Top, R.Right - R.Left, R.Bottom - R.Top, P.flags))
+            if (!SetWindowPos(WindowList[S].Handle, (IntPtr)hnd, R.Left, R.Top, R.Right - R.Left, R.Bottom - R.Top, P.flags))
             {
                 MessageBox.Show("设置窗口位置时发生错误。");
             }
@@ -267,6 +257,29 @@ namespace WindowTopMost
         private void btnCancelTopmost_Click(object sender, EventArgs e)
         {
             setTopmostState(HWND_NOTOPMOST);
+        }
+
+        private void panel1_Paint(object sender, PaintEventArgs e)
+        {
+            Graphics G = e.Graphics;
+            G.DrawLine(new Pen(Color.LightGray), 0, 0, panel1.Width, 0);
+        }
+
+        private void button_selected_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show(lstWindow.SelectedIndex.ToString());
+        }
+
+        private void lstWindow_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            //MessageBox.Show(lstWindow.SelectedIndex.ToString());
+            btnCancelTopmost.Enabled = btnTopMost.Enabled = lstWindow.SelectedIndex != -1;
+        }
+
+        private void panel3_Paint(object sender, PaintEventArgs e)
+        {
+            Graphics G = e.Graphics;
+            G.DrawLine(new Pen(Color.LightGray), 0, 0, panel3.Width, 0);
         }
     }
 }

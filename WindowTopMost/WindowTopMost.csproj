@@ -54,6 +54,14 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="MiyukiListBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="MiyukiListBox.Designer.cs">
+      <DependentUpon>MiyukiListBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MiyukiListBoxItem.cs" />
+    <Compile Include="MiyukiListBoxItemCollection.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Form1.resx">
