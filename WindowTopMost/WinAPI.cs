@@ -136,5 +136,11 @@ namespace WindowTopMost
             [Out] StringBuilder lpImageFileName, 
             [In] [MarshalAs(UnmanagedType.U4)] int nSize
         );
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern uint QueryDosDevice(string lpDeviceName, IntPtr lpTargetPath, uint ucchMax);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern uint QueryDosDevice(string lpDeviceName, StringBuilder lpTargetPath, int ucchMax);
     }
 }

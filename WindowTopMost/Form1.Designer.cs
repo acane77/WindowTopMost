@@ -43,10 +43,10 @@
             this.menuWindowInfo = new System.Windows.Forms.ToolStripMenuItem();
             this.menuProcessName = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
-            this.窗口置顶ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.取消置顶ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuTopMost = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuUntopMost = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
-            this.打开进程位置ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuOpenProcLocation = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1.SuspendLayout();
             this.panel3.SuspendLayout();
             this.panel2.SuspendLayout();
@@ -172,21 +172,23 @@
             this.menuWindowInfo,
             this.menuProcessName,
             this.toolStripMenuItem1,
-            this.窗口置顶ToolStripMenuItem,
-            this.取消置顶ToolStripMenuItem,
+            this.menuTopMost,
+            this.menuUntopMost,
             this.toolStripMenuItem2,
-            this.打开进程位置ToolStripMenuItem});
+            this.menuOpenProcLocation});
             this.rightClickMenu.Name = "rightClickMenu";
-            this.rightClickMenu.Size = new System.Drawing.Size(165, 126);
+            this.rightClickMenu.Size = new System.Drawing.Size(165, 148);
             // 
             // menuWindowInfo
             // 
+            this.menuWindowInfo.Enabled = false;
             this.menuWindowInfo.Name = "menuWindowInfo";
             this.menuWindowInfo.Size = new System.Drawing.Size(164, 22);
             this.menuWindowInfo.Text = "Window Handle";
             // 
             // menuProcessName
             // 
+            this.menuProcessName.Enabled = false;
             this.menuProcessName.Name = "menuProcessName";
             this.menuProcessName.Size = new System.Drawing.Size(164, 22);
             this.menuProcessName.Text = "Process Name";
@@ -196,28 +198,31 @@
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
             this.toolStripMenuItem1.Size = new System.Drawing.Size(161, 6);
             // 
-            // 窗口置顶ToolStripMenuItem
+            // menuTopMost
             // 
-            this.窗口置顶ToolStripMenuItem.Name = "窗口置顶ToolStripMenuItem";
-            this.窗口置顶ToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
-            this.窗口置顶ToolStripMenuItem.Text = "窗口置顶";
+            this.menuTopMost.Name = "menuTopMost";
+            this.menuTopMost.Size = new System.Drawing.Size(164, 22);
+            this.menuTopMost.Text = "窗口置顶";
+            this.menuTopMost.Click += new System.EventHandler(this.menuTopMost_Click);
             // 
-            // 取消置顶ToolStripMenuItem
+            // menuUntopMost
             // 
-            this.取消置顶ToolStripMenuItem.Name = "取消置顶ToolStripMenuItem";
-            this.取消置顶ToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
-            this.取消置顶ToolStripMenuItem.Text = "取消置顶";
+            this.menuUntopMost.Name = "menuUntopMost";
+            this.menuUntopMost.Size = new System.Drawing.Size(164, 22);
+            this.menuUntopMost.Text = "取消置顶";
+            this.menuUntopMost.Click += new System.EventHandler(this.menuUntopMost_Click);
             // 
             // toolStripMenuItem2
             // 
             this.toolStripMenuItem2.Name = "toolStripMenuItem2";
             this.toolStripMenuItem2.Size = new System.Drawing.Size(161, 6);
             // 
-            // 打开进程位置ToolStripMenuItem
+            // menuOpenProcLocation
             // 
-            this.打开进程位置ToolStripMenuItem.Name = "打开进程位置ToolStripMenuItem";
-            this.打开进程位置ToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
-            this.打开进程位置ToolStripMenuItem.Text = "打开进程位置";
+            this.menuOpenProcLocation.Name = "menuOpenProcLocation";
+            this.menuOpenProcLocation.Size = new System.Drawing.Size(164, 22);
+            this.menuOpenProcLocation.Text = "打开进程位置";
+            this.menuOpenProcLocation.Click += new System.EventHandler(this.menuOpenProcLocation_Click);
             // 
             // frmMain
             // 
@@ -255,10 +260,10 @@
         private System.Windows.Forms.ToolStripMenuItem menuWindowInfo;
         private System.Windows.Forms.ToolStripMenuItem menuProcessName;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem1;
-        private System.Windows.Forms.ToolStripMenuItem 窗口置顶ToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem 取消置顶ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem menuTopMost;
+        private System.Windows.Forms.ToolStripMenuItem menuUntopMost;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem2;
-        private System.Windows.Forms.ToolStripMenuItem 打开进程位置ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem menuOpenProcLocation;
     }
 }
 

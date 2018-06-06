@@ -4,9 +4,11 @@ using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -20,6 +22,7 @@ namespace WindowTopMost
         }
 
         List<ProcessHnd> WindowList = new List<ProcessHnd>();
+        ProcessHnd thisItem = null;
 
         bool RefreshWindowList()
         {
@@ -55,15 +58,16 @@ namespace WindowTopMost
                     IntPtr hProc = WinAPI.GetProcessHandleFromHwnd(hWnd);
                     
                     StringBuilder fileName = new StringBuilder(2000);
-                    string PN = "";
+                    string PN = "", Path = "";
                     if (hProc != IntPtr.Zero)
                     {
                         WinAPI.GetProcessImageFileName(hProc, fileName, 2000);
                         PN = fileName.ToString();
                         PN = System.IO.Path.GetFileName(PN);
+                        Path = fileName.ToString();
                     }
                     
-                    WindowList.Add(new ProcessHnd() { WindowName = strTitle, Handle = hWnd, Icon = bitmap, IsTopMost = isTM, ProcessImagePath = PN, PID = hProc });
+                    WindowList.Add(new ProcessHnd() { WindowName = strTitle, Handle = hWnd, Icon = bitmap, IsTopMost = isTM, ProcessImagePath = PN, PID = hProc, ProcessFullPath = Path });
                 }
                 return true;
             };
@@ -267,28 +271,30 @@ namespace WindowTopMost
                 return;
             RECT R = new RECT();
             WINDOWPLACEMENT P = new WINDOWPLACEMENT();
-            bool success = GetWindowRect(WindowList[S].Handle, out R) &&
-                GetWindowPlacement(WindowList[S].Handle, ref P);
+            bool success = GetWindowRect(thisItem.Handle, out R) &&
+                GetWindowPlacement(thisItem.Handle, ref P);
             if (!success)
             {
                 MessageBox.Show("无法获取窗口信息。", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            if (!SetWindowPos(WindowList[S].Handle, (IntPtr)hnd, R.Left, R.Top, R.Right - R.Left, R.Bottom - R.Top, P.flags))
+            if (!SetWindowPos(thisItem.Handle, (IntPtr)hnd, R.Left, R.Top, R.Right - R.Left, R.Bottom - R.Top, P.flags))
             {
                 MessageBox.Show("设置窗口位置时发生错误。\r\n如果该程序是以管理员权限运行的，那么你需要以管理员权限运行本程序。", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            updateTopMostInfo(WindowList[S].Handle);
-            WindowList[S].IsTopMost = lstWindow.Items[S].IsTopMost = WinAPI.isWindowTopMost(WindowList[S].Handle);
+            updateTopMostInfo(thisItem.Handle);
+            thisItem.IsTopMost = lstWindow.Items[S].IsTopMost = WinAPI.isWindowTopMost(thisItem.Handle);
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
+            thisItem = WindowList[lstWindow.SelectedIndex];
             setTopmostState(HWND_TOPMOST);
         }
 
         private void btnCancelTopmost_Click(object sender, EventArgs e)
         {
+            thisItem = WindowList[lstWindow.SelectedIndex];
             setTopmostState(HWND_NOTOPMOST);
         }
 
@@ -336,11 +342,85 @@ namespace WindowTopMost
         private void lstWindow_MouseUp(object sender, MouseEventArgs e)
         {
             MiyukiListBox lst = (MiyukiListBox)lstWindow;
+
+            if (lst.HoverIndex == -1)
+                return;
             
             if (e.Button == MouseButtons.Right)
             {
-                //MessageBox.Show("right click " + lst.HoverIndex);
-                rightClickMenu.Show(this, e.Location); //.Show(e.Location, ToolStripDropDownDirection.BelowRight);
+                thisItem = WindowList[lst.HoverIndex];
+                menuWindowInfo.Text = "Handle ID: " + thisItem.Handle.ToString();
+                menuProcessName.Text = thisItem.ProcessImagePath != "" ? "Process: " + thisItem.ProcessImagePath : "No process information";
+
+                if (this.thisItem.Handle == IntPtr.Zero)
+                {
+                    menuTopMost.Enabled = menuUntopMost.Enabled = false;
+                }
+                else
+                {
+                    bool isTopMost = WinAPI.isWindowTopMost(this.thisItem.Handle);
+                    menuTopMost.Enabled = !isTopMost;
+                    menuUntopMost.Enabled = isTopMost;
+                }
+
+                menuOpenProcLocation.Enabled = thisItem.ProcessImagePath != "";
+
+                rightClickMenu.Show(this, e.Location);
+            }
+        }
+
+        private void menuTopMost_Click(object sender, EventArgs e)
+        {
+            setTopmostState(HWND_TOPMOST);
+        }
+
+        private void menuUntopMost_Click(object sender, EventArgs e)
+        {
+            setTopmostState(HWND_NOTOPMOST);
+        }
+
+        private Dictionary<string, string> Drives = null;
+
+        private Dictionary<string, string> getDriveInfo()
+        {
+            Dictionary<string, string> Drives = new Dictionary<string, string>();
+            DriveInfo[] Ds = DriveInfo.GetDrives();
+            foreach (DriveInfo D in Ds)
+            {
+                string name = D.Name.Replace("\\", "");
+                StringBuilder SB = new StringBuilder(2000);
+                WinAPI.QueryDosDevice(name, SB, 2000);
+                Drives[SB.ToString()] = name;
+            }
+            return Drives;
+        }
+
+        private void menuOpenProcLocation_Click(object sender, EventArgs e)
+        {
+            //MessageBox.Show(drivers[0].);
+            if (thisItem.ProcessFullPath != "")
+            {
+                if (Drives == null)
+                    Drives = getDriveInfo();
+                Regex reg = new Regex(@"(\\Device\\[\w\d]+)\\");
+                Match M = reg.Match(thisItem.ProcessFullPath);
+                if (!M.Success)
+                {
+                    MessageBox.Show("unknown location: " + thisItem.ProcessFullPath);
+                    return;
+                }
+                string capture = M.Groups[1].Value;
+                try
+                {
+                    string letter = Drives[capture];
+                    string location = thisItem.ProcessFullPath.Replace(capture, letter);
+                    
+                    Process.Start("explorer.exe", "/select,\""+location+"\"");
+                }
+                catch(Exception ee)
+                {
+                    MessageBox.Show(ee.Message);
+                }
             }
         }
     }
