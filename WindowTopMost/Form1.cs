@@ -52,7 +52,7 @@ namespace WindowTopMost
 
                     // get process info
                     IntPtr hProc = WinAPI.GetProcessHandleFromHwnd(hWnd);
-                    
+
                     StringBuilder fileName = new StringBuilder(2000);
                     string PN = "", Path = "";
                     if (hProc != IntPtr.Zero)
@@ -62,8 +62,23 @@ namespace WindowTopMost
                         PN = System.IO.Path.GetFileName(PN);
                         Path = fileName.ToString();
                     }
-                    
-                    WindowList.Add(new ProcessHnd() { WindowName = strTitle, Handle = hWnd, Icon = bitmap, IsTopMost = isTM, ProcessImagePath = PN, PID = hProc, ProcessFullPath = Path });
+
+                    // get executable description
+                    string logicalPath = getLogicalFilePath(Path);
+                    string description = null;
+                    try {
+                        if (logicalPath == null)
+                            throw new Exception();
+                        FileVersionInfo F = System.Diagnostics.FileVersionInfo.GetVersionInfo(logicalPath);
+                        description = F.FileDescription;
+                    }
+                    catch(Exception ee)
+                    {
+                        description = "";
+                    }
+                  
+
+                    WindowList.Add(new ProcessHnd() { WindowName = strTitle, Handle = hWnd, Icon = bitmap, IsTopMost = isTM, ProcessImagePath = PN, PID = hProc, ProcessFullPath = Path, Description = description, LogicalPath = logicalPath });
                 }
                 return true;
             };
@@ -347,7 +362,7 @@ namespace WindowTopMost
             if (e.Button == MouseButtons.Right)
             {
                 thisItem = WindowList[lst.HoverIndex];
-                menuWindowInfo.Text = "Handle ID: " + thisItem.Handle.ToString();
+                menuWindowInfo.Text = "Handle: " + thisItem.Handle.ToString();
                 menuProcessName.Text = thisItem.ProcessImagePath != "" ? "Process: " + thisItem.ProcessImagePath : "No process information";
 
                 if (this.thisItem.Handle == IntPtr.Zero)
@@ -393,32 +408,40 @@ namespace WindowTopMost
             return Drives;
         }
 
+        string getLogicalFilePath(string physical)
+        {
+            if (Drives == null)
+                Drives = getDriveInfo();
+            Regex reg = new Regex(@"(\\Device\\[\w\d]+)\\");
+            Match M = reg.Match(physical);
+            if (!M.Success)
+            {
+                MessageBox.Show("unknown location: " + physical);
+                return null;
+            }
+            string capture = M.Groups[1].Value;
+            try
+            {
+                string letter = Drives[capture];
+                string location = physical.Replace(capture, letter);
+
+                return location;
+            }
+            catch (Exception ee)
+            {
+                MessageBox.Show(ee.Message);
+                return null;
+            }
+        }
+
         private void menuOpenProcLocation_Click(object sender, EventArgs e)
         {
             //MessageBox.Show(drivers[0].);
             if (thisItem.ProcessFullPath != "")
             {
-                if (Drives == null)
-                    Drives = getDriveInfo();
-                Regex reg = new Regex(@"(\\Device\\[\w\d]+)\\");
-                Match M = reg.Match(thisItem.ProcessFullPath);
-                if (!M.Success)
-                {
-                    MessageBox.Show("unknown location: " + thisItem.ProcessFullPath);
-                    return;
-                }
-                string capture = M.Groups[1].Value;
-                try
-                {
-                    string letter = Drives[capture];
-                    string location = thisItem.ProcessFullPath.Replace(capture, letter);
-                    
-                    Process.Start("explorer.exe", "/select,\""+location+"\"");
-                }
-                catch(Exception ee)
-                {
-                    MessageBox.Show(ee.Message);
-                }
+                string location = thisItem.LogicalPath;
+                if (location != null)
+                    Process.Start("explorer.exe", "/select,\"" + location + "\"");
             }
         }
     }

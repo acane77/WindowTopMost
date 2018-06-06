@@ -28,6 +28,10 @@ namespace WindowTopMost
 
         public string ProcessFullPath { get; set; }
 
+        public string Description { get; set; }
+
+        public string LogicalPath { get; set; }
+
         public ProcessHnd(Guid iD, string windowName, IntPtr handle)
         {
             ID = iD;
