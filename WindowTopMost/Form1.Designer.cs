@@ -110,7 +110,7 @@
             this.panel1.Controls.Add(this.panel3);
             this.panel1.Controls.Add(this.btnRefresh);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panel1.Location = new System.Drawing.Point(0, 468);
+            this.panel1.Location = new System.Drawing.Point(0, 489);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(552, 49);
             this.panel1.TabIndex = 6;
@@ -146,7 +146,7 @@
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel2.Location = new System.Drawing.Point(0, 0);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(552, 468);
+            this.panel2.Size = new System.Drawing.Size(552, 489);
             this.panel2.TabIndex = 7;
             // 
             // lstWindow
@@ -160,7 +160,7 @@
             this.lstWindow.Location = new System.Drawing.Point(0, 0);
             this.lstWindow.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.lstWindow.Name = "lstWindow";
-            this.lstWindow.Size = new System.Drawing.Size(552, 468);
+            this.lstWindow.Size = new System.Drawing.Size(552, 489);
             this.lstWindow.TabIndex = 1;
             this.lstWindow.MouseClick += new System.Windows.Forms.MouseEventHandler(this.lstWindow_MouseClick);
             this.lstWindow.SelectedIndexChanged += new System.EventHandler(this.lstWindow_SelectedIndexChanged);
@@ -177,7 +177,7 @@
             this.toolStripMenuItem2,
             this.menuOpenProcLocation});
             this.rightClickMenu.Name = "rightClickMenu";
-            this.rightClickMenu.Size = new System.Drawing.Size(165, 148);
+            this.rightClickMenu.Size = new System.Drawing.Size(165, 126);
             // 
             // menuWindowInfo
             // 
@@ -228,7 +228,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(552, 517);
+            this.ClientSize = new System.Drawing.Size(552, 538);
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.panel1);
             this.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));

@@ -104,9 +104,9 @@ namespace WindowTopMost
 
         public static IntPtr GetAppIcon(IntPtr hwnd)
         {
-            IntPtr iconHandle = GetClassLongPtr(hwnd, GCL_HICON);
+            IntPtr iconHandle = SendMessage(hwnd, WM_GETICON, ICON_BIG, 0);
             if (iconHandle == IntPtr.Zero)
-                iconHandle = SendMessage(hwnd, WM_GETICON, ICON_BIG, 0);
+                iconHandle = GetClassLongPtr(hwnd, GCL_HICON);
             if (iconHandle == IntPtr.Zero)
                 iconHandle = SendMessage(hwnd, WM_GETICON, ICON_SMALL, 0);
             if (iconHandle == IntPtr.Zero)

@@ -40,14 +40,10 @@ namespace WindowTopMost
 
                     Bitmap bitmap = null;
                     if (hIcon != IntPtr.Zero) {
-                        var icon = new IconInfo(hIcon);
-                        string msg = "";
                         bitmap = Icon.FromHandle(hIcon).ToBitmap();
                     }
                     else
                     {
-                        var icon = new IconInfo(WinAPI.LoadIcon(IntPtr.Zero, (IntPtr)WinAPI.SystemIcons.IDI_APPLICATION));
-                        string msg = "";
                         bitmap = Icon.FromHandle(WinAPI.LoadIcon(IntPtr.Zero, (IntPtr)WinAPI.SystemIcons.IDI_APPLICATION)).ToBitmap();
                     }
 
@@ -345,7 +341,9 @@ namespace WindowTopMost
 
             if (lst.HoverIndex == -1)
                 return;
-            
+
+            lst.SelectedIndex = lst.HoverIndex;
+
             if (e.Button == MouseButtons.Right)
             {
                 thisItem = WindowList[lst.HoverIndex];
