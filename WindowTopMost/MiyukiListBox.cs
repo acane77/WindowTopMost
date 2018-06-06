@@ -15,6 +15,8 @@ namespace WindowTopMost
         public ProcessHnd mouseItem;
         private MiyukiListBoxItemCollection m_Items;
 
+        public int HoverIndex { get; set; }
+
         public MiyukiListBox() : base()
         {
             InitializeComponent();
@@ -28,6 +30,8 @@ namespace WindowTopMost
             this.SetStyle(ControlStyles.ResizeRedraw, true); // 调整大小时重绘
             this.SetStyle(ControlStyles.AllPaintingInWmPaint, true); // 禁止擦除背景. 
             this.SetStyle(ControlStyles.SupportsTransparentBackColor, true); // 开启控件透明
+
+            HoverIndex = -1;
         }
 
         public new MiyukiListBoxItemCollection Items => m_Items;
@@ -49,6 +53,8 @@ namespace WindowTopMost
 
                 if (bounds.Contains(e.X, e.Y))
                 {
+                    HoverIndex = i;
+
                     if (Items[i] != mouseItem)
                     {
                         mouseItem = Items[i];
@@ -85,7 +91,21 @@ namespace WindowTopMost
             {
                 Rectangle bounds = this.GetItemRectangle(i);
 
-                if (mouseItem == Items[i])
+                string description = Items[i].ProcessImagePath;
+                // 选择的项
+                if (this.SelectedItem == Items[i])
+                {
+                    Color bgColor = Color.FromArgb(105, 255, 102, 153);
+
+                    using (SolidBrush brush = new SolidBrush(bgColor))
+                    {
+                        g.FillRectangle(brush, new Rectangle(bounds.X, bounds.Y, bounds.Width, bounds.Height));
+                    }
+
+                    description = Items[i].ProcessImagePath + " (Process:" + Items[i].PID.ToString() + " / Window: " + Handle.ToString() + ")";
+                }
+                // 置顶的项
+                else  if (Items[i].IsTopMost)
                 {
                     Color bgColor = Color.FromArgb(50, 255, 102, 153);
 
@@ -94,10 +114,10 @@ namespace WindowTopMost
                         g.FillRectangle(brush, new Rectangle(bounds.X, bounds.Y, bounds.Width, bounds.Height));
                     }
                 }
-
-                if (this.SelectedItem == Items[i])
+                // 鼠标滑过的项
+                if (mouseItem == Items[i])
                 {
-                    Color bgColor = Color.FromArgb(105, 255, 102, 153);
+                    Color bgColor = Color.FromArgb(50, 255, 102, 153);
 
                     using (SolidBrush brush = new SolidBrush(bgColor))
                     {
@@ -110,7 +130,7 @@ namespace WindowTopMost
                 System.Drawing.Font fontDesc = new System.Drawing.Font("微软雅黑", 9);
 
                 g.DrawString(Items[i].WindowName, font, new SolidBrush(this.ForeColor), fontLeft, bounds.Top + 8);
-                g.DrawString(Items[i].Handle.ToString(), fontDesc, new SolidBrush(Color.FromArgb(128, 128, 128)), fontLeft, bounds.Top + 31);
+                g.DrawString(description, fontDesc, new SolidBrush(Color.FromArgb(128, 128, 128)), fontLeft, bounds.Top + 31);
 
                 if (Items[i].Icon != null)
                 {

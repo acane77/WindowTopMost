@@ -20,6 +20,12 @@ namespace WindowTopMost
 
         public bool IsFocus { get; set; }
 
+        public bool IsTopMost { get; set; }
+
+        public string ProcessImagePath { get; set; }
+
+        public IntPtr PID { get; set; }
+
         public ProcessHnd(Guid iD, string windowName, IntPtr handle)
         {
             ID = iD;

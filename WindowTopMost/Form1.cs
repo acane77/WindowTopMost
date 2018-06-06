@@ -33,22 +33,37 @@ namespace WindowTopMost
                 if (IsWindowVisible(hWnd) && string.IsNullOrEmpty(strTitle) == false)
                 {
                     // Get icon
-                    IntPtr hIcon = WinAPI.GetClassLongPtr(hWnd, (int)WinAPI.ClassLongFlags.GCLP_HICON);
+                    IntPtr hIcon = WinAPI.GetAppIcon(hWnd);
 
                     Bitmap bitmap = null;
                     if (hIcon != IntPtr.Zero) {
                         var icon = new IconInfo(hIcon);
                         string msg = "";
-                        bitmap = IconInfo.MaskImagePtr(icon.MaskBitmap, icon.ColorBitmap, out msg);
+                        bitmap = Icon.FromHandle(hIcon).ToBitmap();
                     }
                     else
                     {
                         var icon = new IconInfo(WinAPI.LoadIcon(IntPtr.Zero, (IntPtr)WinAPI.SystemIcons.IDI_APPLICATION));
                         string msg = "";
-                        bitmap = IconInfo.MaskImagePtr(icon.MaskBitmap, icon.ColorBitmap, out msg);
+                        bitmap = Icon.FromHandle(WinAPI.LoadIcon(IntPtr.Zero, (IntPtr)WinAPI.SystemIcons.IDI_APPLICATION)).ToBitmap();
                     }
 
-                    WindowList.Add(new ProcessHnd() { WindowName = strTitle, Handle = hWnd, Icon = bitmap });
+                    // get window topmost info
+                    bool isTM = WinAPI.isWindowTopMost(hWnd);
+
+                    // get process info
+                    IntPtr hProc = WinAPI.GetProcessHandleFromHwnd(hWnd);
+                    
+                    StringBuilder fileName = new StringBuilder(2000);
+                    string PN = "";
+                    if (hProc != IntPtr.Zero)
+                    {
+                        WinAPI.GetProcessImageFileName(hProc, fileName, 2000);
+                        PN = fileName.ToString();
+                        PN = System.IO.Path.GetFileName(PN);
+                    }
+                    
+                    WindowList.Add(new ProcessHnd() { WindowName = strTitle, Handle = hWnd, Icon = bitmap, IsTopMost = isTM, ProcessImagePath = PN, PID = hProc });
                 }
                 return true;
             };
@@ -256,13 +271,15 @@ namespace WindowTopMost
                 GetWindowPlacement(WindowList[S].Handle, ref P);
             if (!success)
             {
-                MessageBox.Show("无法获取窗口信息。");
+                MessageBox.Show("无法获取窗口信息。", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             if (!SetWindowPos(WindowList[S].Handle, (IntPtr)hnd, R.Left, R.Top, R.Right - R.Left, R.Bottom - R.Top, P.flags))
             {
-                MessageBox.Show("设置窗口位置时发生错误。");
+                MessageBox.Show("设置窗口位置时发生错误。\r\n如果该程序是以管理员权限运行的，那么你需要以管理员权限运行本程序。", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+            updateTopMostInfo(WindowList[S].Handle);
+            WindowList[S].IsTopMost = lstWindow.Items[S].IsTopMost = WinAPI.isWindowTopMost(WindowList[S].Handle);
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -286,16 +303,45 @@ namespace WindowTopMost
             MessageBox.Show(lstWindow.SelectedIndex.ToString());
         }
 
+        void updateTopMostInfo(IntPtr hWnd)
+        {
+            bool isTopMost = WinAPI.isWindowTopMost(hWnd);
+            btnCancelTopmost.Enabled = isTopMost;
+            btnTopMost.Enabled = !isTopMost;
+        }
+
         private void lstWindow_SelectedIndexChanged(object sender, EventArgs e)
         {
             //MessageBox.Show(lstWindow.SelectedIndex.ToString());
             btnCancelTopmost.Enabled = btnTopMost.Enabled = lstWindow.SelectedIndex != -1;
+
+            if (lstWindow.SelectedIndex != -1)
+            {
+                ProcessHnd H = WindowList[lstWindow.SelectedIndex];
+                updateTopMostInfo(H.Handle);
+            }
         }
 
         private void panel3_Paint(object sender, PaintEventArgs e)
         {
             Graphics G = e.Graphics;
             G.DrawLine(new Pen(Color.LightGray), 0, 0, panel3.Width, 0);
+        }
+
+        private void lstWindow_MouseClick(object sender, MouseEventArgs e)
+        {
+            
+        }
+
+        private void lstWindow_MouseUp(object sender, MouseEventArgs e)
+        {
+            MiyukiListBox lst = (MiyukiListBox)lstWindow;
+            
+            if (e.Button == MouseButtons.Right)
+            {
+                //MessageBox.Show("right click " + lst.HoverIndex);
+                rightClickMenu.Show(this, e.Location); //.Show(e.Location, ToolStripDropDownDirection.BelowRight);
+            }
         }
     }
 }
