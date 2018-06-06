@@ -32,7 +32,23 @@ namespace WindowTopMost
 
                 if (IsWindowVisible(hWnd) && string.IsNullOrEmpty(strTitle) == false)
                 {
-                    WindowList.Add(new ProcessHnd() { WindowName = strTitle, Handle = hWnd });
+                    // Get icon
+                    IntPtr hIcon = WinAPI.GetClassLongPtr(hWnd, (int)WinAPI.ClassLongFlags.GCLP_HICON);
+
+                    Bitmap bitmap = null;
+                    if (hIcon != IntPtr.Zero) {
+                        var icon = new IconInfo(hIcon);
+                        string msg = "";
+                        bitmap = IconInfo.MaskImagePtr(icon.MaskBitmap, icon.ColorBitmap, out msg);
+                    }
+                    else
+                    {
+                        var icon = new IconInfo(WinAPI.LoadIcon(IntPtr.Zero, (IntPtr)WinAPI.SystemIcons.IDI_APPLICATION));
+                        string msg = "";
+                        bitmap = IconInfo.MaskImagePtr(icon.MaskBitmap, icon.ColorBitmap, out msg);
+                    }
+
+                    WindowList.Add(new ProcessHnd() { WindowName = strTitle, Handle = hWnd, Icon = bitmap });
                 }
                 return true;
             };

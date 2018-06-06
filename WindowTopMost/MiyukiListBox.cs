@@ -105,18 +105,19 @@ namespace WindowTopMost
                     }
                 }
 
-                int fontLeft = bounds.Left + 15;
+                int fontLeft = bounds.Left + 60;
                 System.Drawing.Font font = new System.Drawing.Font("微软雅黑", 11);
                 System.Drawing.Font fontDesc = new System.Drawing.Font("微软雅黑", 9);
 
                 g.DrawString(Items[i].WindowName, font, new SolidBrush(this.ForeColor), fontLeft, bounds.Top + 8);
                 g.DrawString(Items[i].Handle.ToString(), fontDesc, new SolidBrush(Color.FromArgb(128, 128, 128)), fontLeft, bounds.Top + 31);
 
-                //if (Items[i].Image != null)
-                //{
-                //    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBilinear;
-                //    g.DrawImage(Items[i].Image, new Rectangle(bounds.X + 5, (bounds.Height - 40) / 2 + bounds.Top, 40, 40));
-                //}
+                if (Items[i].Icon != null)
+                {
+                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBilinear;
+                    g.DrawImage(Items[i].Icon, new Rectangle(bounds.X + 10, (bounds.Height - 40) / 2 + bounds.Top, 40, 40));
+                    
+                }
                 //g.DrawImage(Properties.Resources.error, new Rectangle(bounds.Width - 28, (bounds.Height - 16) / 2 + bounds.Top, 16, 16));
             }
 
