@@ -416,7 +416,7 @@ namespace WindowTopMost
             Match M = reg.Match(physical);
             if (!M.Success)
             {
-                MessageBox.Show("unknown location: " + physical);
+                //MessageBox.Show("unknown location: " + physical);
                 return null;
             }
             string capture = M.Groups[1].Value;
@@ -429,7 +429,7 @@ namespace WindowTopMost
             }
             catch (Exception ee)
             {
-                MessageBox.Show(ee.Message);
+                //MessageBox.Show(ee.Message);
                 return null;
             }
         }
