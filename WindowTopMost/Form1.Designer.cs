@@ -38,15 +38,17 @@
             this.button_selected = new System.Windows.Forms.Button();
             this.panel3 = new System.Windows.Forms.Panel();
             this.panel2 = new System.Windows.Forms.Panel();
-            this.lstWindow = new WindowTopMost.MiyukiListBox();
             this.rightClickMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.menuWindowInfo = new System.Windows.Forms.ToolStripMenuItem();
             this.menuProcessName = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripSeparator();
+            this.menuSwitchTo = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
             this.menuTopMost = new System.Windows.Forms.ToolStripMenuItem();
             this.menuUntopMost = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
             this.menuOpenProcLocation = new System.Windows.Forms.ToolStripMenuItem();
+            this.lstWindow = new WindowTopMost.MiyukiListBox();
             this.panel1.SuspendLayout();
             this.panel3.SuspendLayout();
             this.panel2.SuspendLayout();
@@ -149,35 +151,20 @@
             this.panel2.Size = new System.Drawing.Size(552, 489);
             this.panel2.TabIndex = 7;
             // 
-            // lstWindow
-            // 
-            this.lstWindow.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.lstWindow.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lstWindow.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
-            this.lstWindow.FormattingEnabled = true;
-            this.lstWindow.HoverIndex = -1;
-            this.lstWindow.ItemHeight = 17;
-            this.lstWindow.Location = new System.Drawing.Point(0, 0);
-            this.lstWindow.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.lstWindow.Name = "lstWindow";
-            this.lstWindow.Size = new System.Drawing.Size(552, 489);
-            this.lstWindow.TabIndex = 1;
-            this.lstWindow.MouseClick += new System.Windows.Forms.MouseEventHandler(this.lstWindow_MouseClick);
-            this.lstWindow.SelectedIndexChanged += new System.EventHandler(this.lstWindow_SelectedIndexChanged);
-            this.lstWindow.MouseUp += new System.Windows.Forms.MouseEventHandler(this.lstWindow_MouseUp);
-            // 
             // rightClickMenu
             // 
             this.rightClickMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menuWindowInfo,
             this.menuProcessName,
+            this.toolStripMenuItem3,
+            this.menuSwitchTo,
             this.toolStripMenuItem1,
             this.menuTopMost,
             this.menuUntopMost,
             this.toolStripMenuItem2,
             this.menuOpenProcLocation});
             this.rightClickMenu.Name = "rightClickMenu";
-            this.rightClickMenu.Size = new System.Drawing.Size(165, 126);
+            this.rightClickMenu.Size = new System.Drawing.Size(165, 176);
             // 
             // menuWindowInfo
             // 
@@ -192,6 +179,18 @@
             this.menuProcessName.Name = "menuProcessName";
             this.menuProcessName.Size = new System.Drawing.Size(164, 22);
             this.menuProcessName.Text = "Process Name";
+            // 
+            // toolStripMenuItem3
+            // 
+            this.toolStripMenuItem3.Name = "toolStripMenuItem3";
+            this.toolStripMenuItem3.Size = new System.Drawing.Size(161, 6);
+            // 
+            // menuSwitchTo
+            // 
+            this.menuSwitchTo.Name = "menuSwitchTo";
+            this.menuSwitchTo.Size = new System.Drawing.Size(164, 22);
+            this.menuSwitchTo.Text = "切换至该窗口";
+            this.menuSwitchTo.Click += new System.EventHandler(this.menuSwitchTo_Click);
             // 
             // toolStripMenuItem1
             // 
@@ -223,6 +222,23 @@
             this.menuOpenProcLocation.Size = new System.Drawing.Size(164, 22);
             this.menuOpenProcLocation.Text = "打开进程位置";
             this.menuOpenProcLocation.Click += new System.EventHandler(this.menuOpenProcLocation_Click);
+            // 
+            // lstWindow
+            // 
+            this.lstWindow.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.lstWindow.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lstWindow.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
+            this.lstWindow.FormattingEnabled = true;
+            this.lstWindow.HoverIndex = -1;
+            this.lstWindow.ItemHeight = 17;
+            this.lstWindow.Location = new System.Drawing.Point(0, 0);
+            this.lstWindow.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.lstWindow.Name = "lstWindow";
+            this.lstWindow.Size = new System.Drawing.Size(552, 489);
+            this.lstWindow.TabIndex = 1;
+            this.lstWindow.MouseClick += new System.Windows.Forms.MouseEventHandler(this.lstWindow_MouseClick);
+            this.lstWindow.SelectedIndexChanged += new System.EventHandler(this.lstWindow_SelectedIndexChanged);
+            this.lstWindow.MouseUp += new System.Windows.Forms.MouseEventHandler(this.lstWindow_MouseUp);
             // 
             // frmMain
             // 
@@ -264,6 +280,8 @@
         private System.Windows.Forms.ToolStripMenuItem menuUntopMost;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem2;
         private System.Windows.Forms.ToolStripMenuItem menuOpenProcLocation;
+        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem3;
+        private System.Windows.Forms.ToolStripMenuItem menuSwitchTo;
     }
 }
 
