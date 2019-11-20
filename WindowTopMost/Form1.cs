@@ -214,23 +214,23 @@ namespace WindowTopMost
             {
                 thisItem = WindowList[lst.HoverIndex];
                 
-                menuWindowInfo.Text = "Handle: " + thisItem.Handle.ToString();
-                menuProcessName.Text = thisItem.ProcessImagePath != "" ? "Process: " + thisItem.ProcessImagePath : "No process information";
+                menuItemProcessName.Text = "Handle: " + thisItem.Handle.ToString();
+                menuItemWindowName.Text = thisItem.ProcessImagePath != "" ? "Process: " + thisItem.ProcessImagePath : "No process information";
 
                 if (this.thisItem.Handle == IntPtr.Zero)
                 {
-                    menuTopMost.Enabled = menuUntopMost.Enabled = false;
+                    menuItemWindowTopMost.Enabled = menuItemCancelTopmost.Enabled = false;
                 }
                 else
                 {
                     bool isTopMost = WinAPI.isWindowTopMost(this.thisItem.Handle);
-                    menuTopMost.Enabled = !isTopMost;
-                    menuUntopMost.Enabled = isTopMost;
+                    menuItemWindowTopMost.Enabled = !isTopMost;
+                    menuItemCancelTopmost.Enabled = isTopMost;
                 }
 
-                menuOpenProcLocation.Enabled = thisItem.ProcessImagePath != "";
+                menuItemOpenLocation.Enabled = thisItem.ProcessImagePath != "";
 
-                rightClickMenu.Show(this, e.Location);
+                contextMenu.Show(this, e.Location);
             }
         }
 
@@ -307,7 +307,7 @@ namespace WindowTopMost
                 WinAPI.GetWindowPlacement(thisItem.Handle, ref P);
                 if (!success)
                 {
-                    MessageBox.Show("无法获取窗口信息。", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("无法获取窗口信息。\r\n\r\n可能是该窗口已经关闭。", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
                 WinAPI.SwitchToThisWindow(thisItem.Handle, true);
@@ -320,6 +320,44 @@ namespace WindowTopMost
             IntPtr[] S = new IntPtr[1] { IntPtr.Zero };
             WinAPI.ExtractIconEx(filename, 0, L, S, 1);
             return L[0] == IntPtr.Zero ? S[0] : L[0];
+        }
+
+        private void lstWindow_DoubleClick(object sender, EventArgs e)
+        {
+            thisItem = WindowList[lstWindow.SelectedIndex];
+            if (thisItem.Handle != IntPtr.Zero)
+            {
+                WinAPI.WINDOWPLACEMENT P = new WinAPI.WINDOWPLACEMENT();
+                WinAPI.RECT R = new WinAPI.RECT();
+                bool success = WinAPI.GetWindowRect(thisItem.Handle, out R) &&
+                WinAPI.GetWindowPlacement(thisItem.Handle, ref P);
+                if (!success)
+                {
+                    MessageBox.Show("无法获取窗口信息。\r\n\r\n可能是该窗口已经关闭。", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+                WinAPI.SwitchToThisWindow(thisItem.Handle, true);
+            }
+        }
+
+        private void menuItemSwitchTo_Click(object sender, EventArgs e)
+        {
+            menuSwitchTo_Click(sender, e);
+        }
+
+        private void menuItemWindowTopMost_Click(object sender, EventArgs e)
+        {
+            menuTopMost_Click(sender, e);
+        }
+
+        private void menuItemCancelTopmost_Click(object sender, EventArgs e)
+        {
+            menuUntopMost_Click(sender, e);
+        }
+
+        private void menuItemOpenLocation_Click(object sender, EventArgs e)
+        {
+            menuOpenProcLocation_Click(sender, e);
         }
     }
 }
