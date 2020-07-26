@@ -334,5 +334,8 @@ namespace WindowTopMost
 
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern bool QueryFullProcessImageName([In] IntPtr hProcess, [In] int dwFlags, [Out] StringBuilder lpExeName, ref int lpdwSize);
+
+        [DllImport("kernel32.dll")]
+        public static extern int GetProcessId(IntPtr handle);
     }
 }

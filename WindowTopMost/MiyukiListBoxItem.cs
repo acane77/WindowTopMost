@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -22,19 +23,21 @@ namespace WindowTopMost
 
         public bool IsTopMost { get; set; }
 
-        public string ProcessImagePath { get; set; }
+        public string ProcessFileName { get; set; }
 
-        public IntPtr PID { get; set; }
+        public IntPtr ProcessHandler { get; set; }
 
         public string ProcessFullPath { get; set; }
 
         public string Description { get; set; }
 
-        public string LogicalPath { get; set; }
-
         public byte WindowOpacity { get; set; }
 
         public bool CanSetWindowOpacity { get; set; }
+
+        public int ProcessID { get; set;  }
+
+        public Process ProcessObject { get; set; }
 
         public ProcessHnd(Guid iD, string windowName, IntPtr handle)
         {

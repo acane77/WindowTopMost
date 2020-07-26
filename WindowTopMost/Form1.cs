@@ -20,10 +20,13 @@ namespace WindowTopMost
         public frmMain()
         {
             InitializeComponent();
+            string OSVersion = (string)Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion", "ProductName", null);
+            IsWindows10 = OSVersion.IndexOf("10") >= 0;
         }
 
         List<ProcessHnd> WindowList = new List<ProcessHnd>();
         ProcessHnd thisItem = null;
+        bool IsWindows10 = false;
 
         bool RefreshWindowList()
         {
@@ -36,17 +39,6 @@ namespace WindowTopMost
 
                 if (WinAPI.IsWindowVisible(hWnd) && string.IsNullOrEmpty(strTitle) == false)
                 {
-                    // Get icon
-                    IntPtr hIcon = WinAPI.GetAppIcon(hWnd);
-
-                    Bitmap bitmap = null;
-                    if (hIcon != IntPtr.Zero) {
-                        bitmap = Icon.FromHandle(hIcon).ToBitmap();
-                    }
-                    else
-                    {
-                        bitmap = Icon.FromHandle(WinAPI.LoadIcon(IntPtr.Zero, (IntPtr)WinAPI.SystemIcons.IDI_APPLICATION)).ToBitmap();
-                    }
 
                     // get window topmost info
                     bool isTM = WinAPI.isWindowTopMost(hWnd);
@@ -55,68 +47,45 @@ namespace WindowTopMost
                     bool canSetOpacity = true;
                     byte transparency = GetWindowTransparency(hWnd, out canSetOpacity);
 
-                    /// the following is WINDOWS 10 only 
-                    // 检查操作系统版本
-                    string Version = (string)Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion", "ProductName", null);
-                    if (Version.IndexOf("10") <= 0)
-                    {
-                        WindowList.Add(new ProcessHnd()
-                        {
-                            WindowName = strTitle,
-                            Handle = hWnd,
-                            Icon = bitmap,
-                            IsTopMost = isTM,
-                            ProcessImagePath = "",
-                            PID = IntPtr.Zero,
-                            ProcessFullPath = "",
-                            Description = "",
-                            LogicalPath = "",
-                            WindowOpacity = transparency,
-                            CanSetWindowOpacity = canSetOpacity
-                        });
-                        return true;
-                    }
-
-                    // get process info
+                    // get process information
                     IntPtr hProc = WinAPI.GetProcessHandleFromHwnd(hWnd);
-
-                    int capacity = 2000;
-                    StringBuilder fileName = new StringBuilder(capacity);
-                    string PN = "", Path = "";
-                    if (hProc != IntPtr.Zero)
+                    int pid = WinAPI.GetProcessId(hProc);
+                    Process process = Process.GetProcessById(pid);
+                    string processPath = "";
+                    string description = "";
+                    string processFileName = "";
+                    try
                     {
-                        try
-                        {
-                            WinAPI.QueryFullProcessImageName(hProc, 0, fileName, ref capacity);
-                            //WinAPI.GetProcessImageFileName(hProc, fileName, 2000);
-                            PN = fileName.ToString();
-                            PN = System.IO.Path.GetFileName(PN);
-                            Path = fileName.ToString();
-                        }
-                        catch { }
+                        ProcessModule pModule = process.MainModule;
+                        processPath = pModule.FileName;
+                        description = pModule.FileVersionInfo.FileDescription;
+                        processFileName = process.MainModule.ModuleName;
                     }
+                    catch {}
 
-                    // get executable description
-                    //string logicalPath = getLogicalFilePath(Path);
-                    string logicalPath = Path;
-                    string description = null;
-                    try {
-                        if (logicalPath == null)
-                            throw new Exception();
-                        FileVersionInfo F = System.Diagnostics.FileVersionInfo.GetVersionInfo(logicalPath);
-                        description = F.FileDescription;
-                    }
-                    catch (Exception ee)
+                    // Get icon
+                    IntPtr hIcon = WinAPI.GetAppIcon(hWnd);
+
+                    Bitmap bitmap = null;
+                    if (hIcon != IntPtr.Zero)
                     {
-                        description = "";
+                        bitmap = Icon.FromHandle(hIcon).ToBitmap();
                     }
-
+                    else
+                    {
+                        bitmap = Icon.FromHandle(WinAPI.LoadIcon(IntPtr.Zero, (IntPtr)WinAPI.SystemIcons.IDI_APPLICATION)).ToBitmap();
+                    }
                     // try get application icon
                     if (hIcon == IntPtr.Zero)
                     {
-                        hIcon = extractIconFromFile(logicalPath);
+                        hIcon = extractIconFromFile(processPath);
                         if (hIcon != IntPtr.Zero)
                             bitmap = Icon.FromHandle(hIcon).ToBitmap();
+                    }
+                    // 还是没有图标，尝试看是否是UWP程序
+                    if (hIcon == IntPtr.Zero && IsWindows10)
+                    {
+
                     }
 
                     WindowList.Add(new ProcessHnd()
@@ -125,13 +94,14 @@ namespace WindowTopMost
                         Handle = hWnd,
                         Icon = bitmap,
                         IsTopMost = isTM,
-                        ProcessImagePath = PN,
-                        PID = hProc,
-                        ProcessFullPath = Path,
+                        ProcessHandler = hProc,
+                        ProcessFullPath = processPath,
                         Description = description,
-                        LogicalPath = logicalPath,
                         WindowOpacity = transparency,
-                        CanSetWindowOpacity = canSetOpacity
+                        CanSetWindowOpacity = canSetOpacity,
+                        ProcessObject = process,
+                        ProcessID = pid,
+                        ProcessFileName = processFileName
                     });
                 }
                 return true;
@@ -289,7 +259,7 @@ namespace WindowTopMost
                 thisItem = WindowList[lst.HoverIndex];
                 
                 menuItemProcessName.Text = "Handle: " + thisItem.Handle.ToString();
-                menuItemWindowName.Text = thisItem.ProcessImagePath != "" ? "Process: " + thisItem.ProcessImagePath : "No process information";
+                menuItemWindowName.Text = thisItem.ProcessFileName != "" ? "Process: " + thisItem.ProcessFileName : "No process information";
 
                 if (this.thisItem.Handle == IntPtr.Zero)
                 {
@@ -302,7 +272,7 @@ namespace WindowTopMost
                     menuItemCancelTopmost.Enabled = isTopMost;
                 }
 
-                menuItemOpenLocation.Enabled = thisItem.ProcessImagePath != "";
+                menuItemOpenLocation.Enabled = thisItem.ProcessFileName != "";
 
                 // set checked state with current opacity
                 byte opacity = thisItem.WindowOpacity;
@@ -375,7 +345,7 @@ namespace WindowTopMost
             //MessageBox.Show(drivers[0].);
             if (thisItem.ProcessFullPath != "")
             {
-                string location = thisItem.LogicalPath;
+                string location = thisItem.ProcessFullPath;
                 if (location != null)
                     Process.Start("explorer.exe", "/select,\"" + location + "\"");
             }
@@ -455,9 +425,9 @@ namespace WindowTopMost
 
             string info = "窗口句柄: " + thisItem.Handle.ToString() + "\r\n";
             info += "窗口名称：" + thisItem.WindowName + "\r\n";
-            info += thisItem.ProcessImagePath != "" ? "进程名: " + thisItem.ProcessImagePath : "无法获取到进程信息，请使用管理员权限运行本程序后再试。";
+            info += thisItem.ProcessFileName != "" ? "进程名: " + thisItem.ProcessFileName : "无法获取到进程信息，请使用管理员权限运行本程序后再试。";
             info += "\r\n";
-            info += "进程位置：" + thisItem.LogicalPath + "\r\n";
+            info += "进程位置：" + thisItem.ProcessFullPath + "\r\n";
             //info += "进程物理位置：" + thisItem.ProcessFullPath + "\r\n";
 
             MessageBox.Show(info, !String.IsNullOrEmpty(thisItem.WindowName) ? thisItem.WindowName : thisItem.Description, MessageBoxButtons.OK, MessageBoxIcon.Information);

@@ -92,7 +92,7 @@ namespace WindowTopMost
             {
                 Rectangle bounds = this.GetItemRectangle(i);
 
-                string description = Items[i].ProcessImagePath;
+                string description = Items[i].ProcessFileName;
                 if (Items[i].Description != null && Items[i].Description != "")
                 {
                     description = Items[i].Description;
@@ -107,7 +107,7 @@ namespace WindowTopMost
                         g.FillRectangle(brush, new Rectangle(bounds.X, bounds.Y, bounds.Width, bounds.Height));
                     }
 
-                    description += " (Process:" + Items[i].PID.ToString() + " / Window: " + Items[i].Handle.ToString() + ")";
+                    description += " (Process ID:" + Items[i].ProcessID.ToString() + " / Window: " + Items[i].Handle.ToString() + ")";
                 }
                 // 置顶的项
                 else  if (Items[i].IsTopMost)
