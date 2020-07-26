@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Drawing.Text;
 
 namespace WindowTopMost
 {
@@ -133,8 +134,10 @@ namespace WindowTopMost
                 System.Drawing.Font font = new System.Drawing.Font("微软雅黑", 11);
                 System.Drawing.Font fontDesc = new System.Drawing.Font("微软雅黑", 9);
 
-                g.DrawString(Items[i].WindowName, font, new SolidBrush(this.ForeColor), fontLeft, bounds.Top + 8);
-                g.DrawString(description, fontDesc, new SolidBrush(Color.FromArgb(128, 128, 128)), fontLeft, bounds.Top + 31);
+                g.TextRenderingHint = TextRenderingHint.AntiAlias;
+                int bias = -7;
+                g.DrawString(Items[i].WindowName, font, new SolidBrush(this.ForeColor), fontLeft, bounds.Top + 8 + bias);
+                g.DrawString(description, fontDesc, new SolidBrush(Color.FromArgb(128, 128, 128)), fontLeft, bounds.Top + 33 + bias);
 
                 if (Items[i].Icon != null)
                 {

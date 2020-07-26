@@ -45,7 +45,18 @@
             this.menuItem5 = new System.Windows.Forms.MenuItem();
             this.menuItemWindowTopMost = new System.Windows.Forms.MenuItem();
             this.menuItemCancelTopmost = new System.Windows.Forms.MenuItem();
+            this.menuItem1 = new System.Windows.Forms.MenuItem();
+            this.menuItemSetOpacity = new System.Windows.Forms.MenuItem();
+            this.menuItemSetOpacityTo100 = new System.Windows.Forms.MenuItem();
+            this.menuItemSetOpacityTo90 = new System.Windows.Forms.MenuItem();
+            this.menuItemSetOpacityTo75 = new System.Windows.Forms.MenuItem();
+            this.menuItemSetOpacityTo50 = new System.Windows.Forms.MenuItem();
+            this.menuItemSetOpacityTo25 = new System.Windows.Forms.MenuItem();
+            this.menuItemSetOpacityTo0 = new System.Windows.Forms.MenuItem();
+            this.menuItem12 = new System.Windows.Forms.MenuItem();
+            this.menuItemSetOpacityToCustomValue = new System.Windows.Forms.MenuItem();
             this.menuItem8 = new System.Windows.Forms.MenuItem();
+            this.menuGetInfo = new System.Windows.Forms.MenuItem();
             this.menuItemOpenLocation = new System.Windows.Forms.MenuItem();
             this.lstWindow = new WindowTopMost.MiyukiListBox();
             this.panel1.SuspendLayout();
@@ -110,7 +121,7 @@
             this.panel1.Controls.Add(this.panel3);
             this.panel1.Controls.Add(this.btnRefresh);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panel1.Location = new System.Drawing.Point(0, 447);
+            this.panel1.Location = new System.Drawing.Point(0, 526);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(552, 49);
             this.panel1.TabIndex = 6;
@@ -146,7 +157,7 @@
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel2.Location = new System.Drawing.Point(0, 0);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(552, 447);
+            this.panel2.Size = new System.Drawing.Size(552, 526);
             this.panel2.TabIndex = 7;
             // 
             // contextMenu
@@ -159,7 +170,10 @@
             this.menuItem5,
             this.menuItemWindowTopMost,
             this.menuItemCancelTopmost,
+            this.menuItem1,
+            this.menuItemSetOpacity,
             this.menuItem8,
+            this.menuGetInfo,
             this.menuItemOpenLocation});
             // 
             // menuItemWindowName
@@ -167,20 +181,24 @@
             this.menuItemWindowName.Enabled = false;
             this.menuItemWindowName.Index = 0;
             this.menuItemWindowName.Text = "窗口句柄";
+            this.menuItemWindowName.Visible = false;
             // 
             // menuItemProcessName
             // 
             this.menuItemProcessName.Enabled = false;
             this.menuItemProcessName.Index = 1;
             this.menuItemProcessName.Text = "进程名";
+            this.menuItemProcessName.Visible = false;
             // 
             // menuItem3
             // 
             this.menuItem3.Index = 2;
             this.menuItem3.Text = "-";
+            this.menuItem3.Visible = false;
             // 
             // menuItemSwitchTo
             // 
+            this.menuItemSwitchTo.DefaultItem = true;
             this.menuItemSwitchTo.Index = 3;
             this.menuItemSwitchTo.Text = "切换至该窗口(&S)";
             this.menuItemSwitchTo.Click += new System.EventHandler(this.menuItemSwitchTo_Click);
@@ -202,14 +220,79 @@
             this.menuItemCancelTopmost.Text = "取消置顶(&C)";
             this.menuItemCancelTopmost.Click += new System.EventHandler(this.menuItemCancelTopmost_Click);
             // 
+            // menuItem1
+            // 
+            this.menuItem1.Index = 7;
+            this.menuItem1.Text = "-";
+            // 
+            // menuItemSetOpacity
+            // 
+            this.menuItemSetOpacity.Index = 8;
+            this.menuItemSetOpacity.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+            this.menuItemSetOpacityTo100,
+            this.menuItemSetOpacityTo90,
+            this.menuItemSetOpacityTo75,
+            this.menuItemSetOpacityTo50,
+            this.menuItemSetOpacityTo25,
+            this.menuItemSetOpacityTo0,
+            this.menuItem12,
+            this.menuItemSetOpacityToCustomValue});
+            this.menuItemSetOpacity.Text = "设置窗口透明度(&O)";
+            // 
+            // menuItemSetOpacityTo100
+            // 
+            this.menuItemSetOpacityTo100.Index = 0;
+            this.menuItemSetOpacityTo100.Text = "100%";
+            // 
+            // menuItemSetOpacityTo90
+            // 
+            this.menuItemSetOpacityTo90.Index = 1;
+            this.menuItemSetOpacityTo90.Text = "90%";
+            // 
+            // menuItemSetOpacityTo75
+            // 
+            this.menuItemSetOpacityTo75.Index = 2;
+            this.menuItemSetOpacityTo75.Text = "75%";
+            // 
+            // menuItemSetOpacityTo50
+            // 
+            this.menuItemSetOpacityTo50.Index = 3;
+            this.menuItemSetOpacityTo50.Text = "50%";
+            // 
+            // menuItemSetOpacityTo25
+            // 
+            this.menuItemSetOpacityTo25.Index = 4;
+            this.menuItemSetOpacityTo25.Text = "25%";
+            // 
+            // menuItemSetOpacityTo0
+            // 
+            this.menuItemSetOpacityTo0.Index = 5;
+            this.menuItemSetOpacityTo0.Text = "0%（隐藏窗口）";
+            // 
+            // menuItem12
+            // 
+            this.menuItem12.Index = 6;
+            this.menuItem12.Text = "-";
+            // 
+            // menuItemSetOpacityToCustomValue
+            // 
+            this.menuItemSetOpacityToCustomValue.Index = 7;
+            this.menuItemSetOpacityToCustomValue.Text = "自定义(&C)...";
+            // 
             // menuItem8
             // 
-            this.menuItem8.Index = 7;
+            this.menuItem8.Index = 9;
             this.menuItem8.Text = "-";
+            // 
+            // menuGetInfo
+            // 
+            this.menuGetInfo.Index = 10;
+            this.menuGetInfo.Text = "显示信息(&I)";
+            this.menuGetInfo.Click += new System.EventHandler(this.menuGetInfo_Click);
             // 
             // menuItemOpenLocation
             // 
-            this.menuItemOpenLocation.Index = 8;
+            this.menuItemOpenLocation.Index = 11;
             this.menuItemOpenLocation.Text = "打开进程位置(&O)";
             this.menuItemOpenLocation.Click += new System.EventHandler(this.menuItemOpenLocation_Click);
             // 
@@ -224,7 +307,7 @@
             this.lstWindow.Location = new System.Drawing.Point(0, 0);
             this.lstWindow.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.lstWindow.Name = "lstWindow";
-            this.lstWindow.Size = new System.Drawing.Size(552, 447);
+            this.lstWindow.Size = new System.Drawing.Size(552, 526);
             this.lstWindow.TabIndex = 1;
             this.lstWindow.MouseClick += new System.Windows.Forms.MouseEventHandler(this.lstWindow_MouseClick);
             this.lstWindow.SelectedIndexChanged += new System.EventHandler(this.lstWindow_SelectedIndexChanged);
@@ -233,9 +316,9 @@
             // 
             // frmMain
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(552, 496);
+            this.ClientSize = new System.Drawing.Size(552, 575);
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.panel1);
             this.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
@@ -272,6 +355,17 @@
         private System.Windows.Forms.MenuItem menuItemCancelTopmost;
         private System.Windows.Forms.MenuItem menuItem8;
         private System.Windows.Forms.MenuItem menuItemOpenLocation;
+        private System.Windows.Forms.MenuItem menuGetInfo;
+        private System.Windows.Forms.MenuItem menuItem1;
+        private System.Windows.Forms.MenuItem menuItemSetOpacity;
+        private System.Windows.Forms.MenuItem menuItemSetOpacityTo100;
+        private System.Windows.Forms.MenuItem menuItemSetOpacityTo90;
+        private System.Windows.Forms.MenuItem menuItemSetOpacityTo75;
+        private System.Windows.Forms.MenuItem menuItemSetOpacityTo50;
+        private System.Windows.Forms.MenuItem menuItemSetOpacityTo25;
+        private System.Windows.Forms.MenuItem menuItemSetOpacityTo0;
+        private System.Windows.Forms.MenuItem menuItem12;
+        private System.Windows.Forms.MenuItem menuItemSetOpacityToCustomValue;
     }
 }
 

@@ -32,6 +32,10 @@ namespace WindowTopMost
 
         public string LogicalPath { get; set; }
 
+        public byte WindowOpacity { get; set; }
+
+        public bool CanSetWindowOpacity { get; set; }
+
         public ProcessHnd(Guid iD, string windowName, IntPtr handle)
         {
             ID = iD;

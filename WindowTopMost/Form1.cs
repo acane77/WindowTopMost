@@ -84,8 +84,13 @@ namespace WindowTopMost
                         if (hIcon != IntPtr.Zero)
                             bitmap = Icon.FromHandle(hIcon).ToBitmap();
                     }
-                        
-                    WindowList.Add(new ProcessHnd() { WindowName = strTitle, Handle = hWnd, Icon = bitmap, IsTopMost = isTM, ProcessImagePath = PN, PID = hProc, ProcessFullPath = Path, Description = description, LogicalPath = logicalPath });
+
+                    // Get window opacity
+                    bool canSetOpacity = true;
+                    byte transparency = GetWindowTransparency(hWnd, out canSetOpacity);
+
+                    WindowList.Add(new ProcessHnd() { WindowName = strTitle, Handle = hWnd, Icon = bitmap, IsTopMost = isTM, ProcessImagePath = PN, PID = hProc, 
+                        ProcessFullPath = Path, Description = description, LogicalPath = logicalPath, WindowOpacity = transparency, CanSetWindowOpacity = canSetOpacity });
                 }
                 return true;
             };
@@ -124,6 +129,33 @@ namespace WindowTopMost
         private void frmMain_Load(object sender, EventArgs e)
         {
             UpdateProcessList();
+
+            // Register events
+            foreach (MenuItem menu in menuItemSetOpacity.MenuItems)
+            {
+                string menuOpacityValue = menu.Text.Split("%".ToCharArray())[0];
+                try
+                {
+                    byte opacityValue = (byte)(Int32.Parse(menuOpacityValue) / 100.0 * 255);
+                    menu.Click += (object sender_, EventArgs e_) =>
+                    {
+                        SetWindowTransparency(thisItem.Handle, opacityValue);
+                    };
+                }
+                catch
+                {
+                    menu.Click += (object sender_, EventArgs e_) =>
+                    {
+                        FormSetOpacity frm = new FormSetOpacity();
+                        frm.SetInitlalValue(thisItem.WindowOpacity);
+                        frm.ShowDialog();
+                        if (frm.TransparenctChanged)
+                        {
+                            SetWindowTransparency(thisItem.Handle, (byte)(frm.TransparencyValue / 100.0 * 255));
+                        }
+                    };   
+                }
+            }
         }
 
         void setTopmostState(int hnd)
@@ -229,6 +261,16 @@ namespace WindowTopMost
                 }
 
                 menuItemOpenLocation.Enabled = thisItem.ProcessImagePath != "";
+
+                // set checked state with current opacity
+                byte opacity = thisItem.WindowOpacity;
+                menuItemSetOpacityTo100.Checked = thisItem.CanSetWindowOpacity && (opacity == 255);
+                menuItemSetOpacityTo90.Checked = thisItem.CanSetWindowOpacity && (opacity == 229);
+                menuItemSetOpacityTo75.Checked = thisItem.CanSetWindowOpacity && (opacity == 191);
+                menuItemSetOpacityTo50.Checked = thisItem.CanSetWindowOpacity && (opacity == 127);
+                menuItemSetOpacityTo25.Checked = thisItem.CanSetWindowOpacity && (opacity == 63);
+                menuItemSetOpacityTo0.Checked = thisItem.CanSetWindowOpacity && (opacity == 0);
+                //menuItemSetOpacity.Enabled = thisItem.CanSetWindowOpacity;
 
                 contextMenu.Show(this, e.Location);
             }
@@ -359,5 +401,62 @@ namespace WindowTopMost
         {
             menuOpenProcLocation_Click(sender, e);
         }
+
+        private void menuGetInfo_Click(object sender, EventArgs e)
+        {
+            MiyukiListBox lst = (MiyukiListBox)lstWindow;
+
+            if (lst.HoverIndex == -1)
+                return;
+
+            thisItem = WindowList[lst.HoverIndex];
+
+            string info = "窗口句柄: " + thisItem.Handle.ToString() + "\r\n";
+            info += "窗口名称：" + thisItem.WindowName + "\r\n";
+            info += thisItem.ProcessImagePath != "" ? "进程名: " + thisItem.ProcessImagePath : "无法获取到进程信息，请使用管理员权限运行本程序后再试。";
+            info += "\r\n";
+            info += "进程逻辑位置：" + thisItem.LogicalPath + "\r\n";
+            info += "进程物理位置：" + thisItem.ProcessFullPath + "\r\n";
+
+            MessageBox.Show(info, !String.IsNullOrEmpty(thisItem.WindowName) ? thisItem.WindowName : thisItem.Description, MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+        }
+
+        public void SetWindowTransparency(IntPtr WindowHandle, byte Alpha, ProcessHnd p = null)
+        {
+            IntPtr windowInfoPtr = WinAPI.GetWindowLongPtr(WindowHandle, WinAPI.GWL_EXSTYLE);
+            int WindowLong = windowInfoPtr.ToInt32() | WinAPI.WS_EX_LAYERED;
+            WinAPI.SetWindowLongPtr(WindowHandle, WinAPI.GWL_EXSTYLE, IntPtr.Add(IntPtr.Zero, WindowLong));
+            bool success = WinAPI.SetLayeredWindowAttributes(WindowHandle, 0, Alpha, WinAPI.LWA_ALPHA);
+            if (!success)
+            {
+                MessageBox.Show("无法设置该窗口的透明度", Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            if (p == null)
+                p = thisItem;
+
+            bool canSetTransparency = true;
+            byte newAlpha = GetWindowTransparency(WindowHandle, out canSetTransparency);
+            p.CanSetWindowOpacity = canSetTransparency;
+            p.WindowOpacity = newAlpha;
+            if (!canSetTransparency)
+            {
+                MessageBox.Show("无法设置该窗口的透明度", Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        public byte GetWindowTransparency(IntPtr WindowHandle, out bool canSetTransparency)
+        {
+            uint ckey = 0;
+            byte alpha = 0;
+            uint lwa = 0;
+            WinAPI.GetLayeredWindowAttributes(WindowHandle, out ckey, out alpha, out lwa);
+            IntPtr windowInfoPtr = WinAPI.GetWindowLongPtr(WindowHandle, WinAPI.GWL_EXSTYLE);
+            canSetTransparency = (windowInfoPtr.ToInt32() & WinAPI.WS_EX_LAYERED) > 0 && lwa > 0;
+            return alpha;
+        }
+
+
     }
 }
