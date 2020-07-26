@@ -9,6 +9,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Win32;
@@ -22,6 +23,12 @@ namespace WindowTopMost
             InitializeComponent();
             string OSVersion = (string)Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion", "ProductName", null);
             IsWindows10 = OSVersion.IndexOf("10") >= 0;
+            Control.CheckForIllegalCrossThreadCalls = false;
+
+            if (!IsWindows10)
+            {
+                menuGetInfo.Visible = menuItemOpenLocation.Visible = menuItem8.Visible = false;
+            }
         }
 
         List<ProcessHnd> WindowList = new List<ProcessHnd>();
@@ -132,6 +139,7 @@ namespace WindowTopMost
 
         void UpdateProcessList()
         {
+            btnRefresh.Enabled = false;
             if (!RefreshWindowList())
             {
                 MessageBox.Show("Get window list failed");
@@ -142,6 +150,7 @@ namespace WindowTopMost
             {
                 lstWindow.Items.Add(H);
             }
+            btnRefresh.Enabled = true;
         }
 
         private void btnRefresh_Click(object sender, EventArgs e)

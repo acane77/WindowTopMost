@@ -107,7 +107,8 @@ namespace WindowTopMost
                         g.FillRectangle(brush, new Rectangle(bounds.X, bounds.Y, bounds.Width, bounds.Height));
                     }
 
-                    description += " (Process ID:" + Items[i].ProcessID.ToString() + " / Window: " + Items[i].Handle.ToString() + ")";
+                    if (!String.IsNullOrEmpty(Items[i].ProcessFileName.ToString()))
+                        description += " (" + Items[i].ProcessFileName.ToString() + ", PID:" + Items[i].ProcessID  + ")";
                 }
                 // 置顶的项
                 else  if (Items[i].IsTopMost)
@@ -136,6 +137,8 @@ namespace WindowTopMost
 
                 g.TextRenderingHint = TextRenderingHint.AntiAlias;
                 int bias = -7;
+                if (Items[i].ProcessID == 0)
+                    bias += 9;
                 g.DrawString(Items[i].WindowName, font, new SolidBrush(this.ForeColor), fontLeft, bounds.Top + 8 + bias);
                 g.DrawString(description, fontDesc, new SolidBrush(Color.FromArgb(128, 128, 128)), fontLeft, bounds.Top + 33 + bias);
 
