@@ -63,10 +63,34 @@ namespace WindowTopMost
                     }
                     catch {}
 
+                    Bitmap bitmapUWP = null;
+                    // 如果是UWP程序，获取UWP程序的图标
+                    if (IsWindows10)
+                    {
+                        UWPProcess.AppxPackage appxPackage = UWPProcess.AppxPackage.FromProcess(process);
+                        if (appxPackage != null)
+                        {
+                            string logoPath = appxPackage.FindHighestScaleQualifiedImagePath(appxPackage.Logo);
+                            if (logoPath != null)
+                            {
+                                bitmapUWP = new Bitmap(logoPath);
+                                Bitmap bitmapBackground = new Bitmap(bitmapUWP.Width, bitmapUWP.Height);
+                                for (int i=0; i< bitmapUWP.Width; i++)
+                                    for (int j=0; j< bitmapUWP.Height; j++)
+                                        bitmapBackground.SetPixel(i, j, Color.FromArgb(255, 128, 128));
+                                using (Graphics gr = Graphics.FromImage(bitmapBackground))
+                                {
+                                    gr.DrawImage(bitmapUWP, new PointF(0,0));
+                                }
+                                bitmapUWP = bitmapBackground;
+                            }
+                        }
+                    }
+
                     // Get icon
                     IntPtr hIcon = WinAPI.GetAppIcon(hWnd);
-
                     Bitmap bitmap = null;
+
                     if (hIcon != IntPtr.Zero)
                     {
                         bitmap = Icon.FromHandle(hIcon).ToBitmap();
@@ -82,17 +106,13 @@ namespace WindowTopMost
                         if (hIcon != IntPtr.Zero)
                             bitmap = Icon.FromHandle(hIcon).ToBitmap();
                     }
-                    // 还是没有图标，尝试看是否是UWP程序
-                    if (hIcon == IntPtr.Zero && IsWindows10)
-                    {
-
-                    }
+                    
 
                     WindowList.Add(new ProcessHnd()
                     {
                         WindowName = strTitle,
                         Handle = hWnd,
-                        Icon = bitmap,
+                        Icon = bitmapUWP == null ? bitmap : bitmapUWP,
                         IsTopMost = isTM,
                         ProcessHandler = hProc,
                         ProcessFullPath = processPath,
