@@ -23,7 +23,7 @@ namespace WindowTopMost
             if (Version.IndexOf("10") <= 0)
             {
                 MessageBox.Show("此程序仅可以在Windows 10下运行。", "Window Top-Mostify", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
+                //return;
             }
             frmMain MainForm = new frmMain();
             Application.Run(MainForm);

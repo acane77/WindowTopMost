@@ -53,18 +53,21 @@ namespace WindowTopMost
                     // get process info
                     IntPtr hProc = WinAPI.GetProcessHandleFromHwnd(hWnd);
 
-                    StringBuilder fileName = new StringBuilder(2000);
+                    int capacity = 2000;
+                    StringBuilder fileName = new StringBuilder(capacity);
                     string PN = "", Path = "";
                     if (hProc != IntPtr.Zero)
                     {
-                        WinAPI.GetProcessImageFileName(hProc, fileName, 2000);
+                        WinAPI.QueryFullProcessImageName(hProc, 0, fileName, ref capacity);
+                        //WinAPI.GetProcessImageFileName(hProc, fileName, 2000);
                         PN = fileName.ToString();
                         PN = System.IO.Path.GetFileName(PN);
                         Path = fileName.ToString();
                     }
 
                     // get executable description
-                    string logicalPath = getLogicalFilePath(Path);
+                    //string logicalPath = getLogicalFilePath(Path);
+                    string logicalPath = Path;
                     string description = null;
                     try {
                         if (logicalPath == null)

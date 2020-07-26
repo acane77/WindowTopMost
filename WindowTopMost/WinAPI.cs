@@ -331,5 +331,8 @@ namespace WindowTopMost
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern bool GetLayeredWindowAttributes(IntPtr hwnd, out uint crKey, out byte bAlpha, out uint dwFlags);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern bool QueryFullProcessImageName([In] IntPtr hProcess, [In] int dwFlags, [Out] StringBuilder lpExeName, ref int lpdwSize);
     }
 }
