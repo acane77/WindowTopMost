@@ -11,10 +11,11 @@ namespace WindowTopMost
     {
         public static float scale = 1.0f;
 
-        public static float GetScale(IntPtr window_ptr)
+        public static float GetScale(IntPtr window_ptr, bool make_public = true)
         {
             Graphics graphics = Graphics.FromHwnd(window_ptr);
-            scale = graphics.DpiX / 96;
+            if (make_public)
+                scale = graphics.DpiX / 96;
             return scale;
         }
     }
