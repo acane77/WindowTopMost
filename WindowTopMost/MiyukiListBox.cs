@@ -18,6 +18,10 @@ namespace WindowTopMost
 
         public int HoverIndex { get; set; }
 
+        int ScaledSize(int sz) {
+            return (int)(sz * DpiInfo.scale);
+        }
+
         public MiyukiListBox() : base()
         {
             InitializeComponent();
@@ -31,6 +35,7 @@ namespace WindowTopMost
             this.SetStyle(ControlStyles.ResizeRedraw, true); // 调整大小时重绘
             this.SetStyle(ControlStyles.AllPaintingInWmPaint, true); // 禁止擦除背景. 
             this.SetStyle(ControlStyles.SupportsTransparentBackColor, true); // 开启控件透明
+            this.Scale(new SizeF { Height = DpiInfo.scale, Width = DpiInfo.scale });
 
             HoverIndex = -1;
         }
@@ -131,21 +136,25 @@ namespace WindowTopMost
                     }
                 }
 
-                int fontLeft = bounds.Left + 60;
+                int fontLeft = bounds.Left + ScaledSize(40);
                 System.Drawing.Font font = new System.Drawing.Font("微软雅黑", 11);
                 System.Drawing.Font fontDesc = new System.Drawing.Font("微软雅黑", 9);
 
                 g.TextRenderingHint = TextRenderingHint.AntiAlias;
-                int bias = -7;
-                if (Items[i].ProcessID == 0)
-                    bias += 9;
-                g.DrawString(Items[i].WindowName, font, new SolidBrush(this.ForeColor), fontLeft, bounds.Top + 8 + bias);
-                g.DrawString(description, fontDesc, new SolidBrush(Color.FromArgb(128, 128, 128)), fontLeft, bounds.Top + 33 + bias);
+                int bias = ScaledSize(-5);
+                if (Items[i].ProcessID == 0 || description == "")
+                    bias += ScaledSize(8);
+                g.DrawString(Items[i].WindowName, font, new SolidBrush(this.ForeColor), fontLeft, bounds.Top + ScaledSize(8) + bias);
+                g.DrawString(description, fontDesc, new SolidBrush(Color.FromArgb(128, 128, 128)), fontLeft, bounds.Top + ScaledSize(30) + bias);
 
                 if (Items[i].Icon != null)
                 {
                     g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBilinear;
-                    g.DrawImage(Items[i].Icon, new Rectangle(bounds.X + 10, (bounds.Height - 40) / 2 + bounds.Top, 40, 40));
+                    g.DrawImage(Items[i].Icon, new Rectangle(
+                        (bounds.X + ScaledSize(10)),
+                        ((bounds.Height - ScaledSize(25)) / 2 + bounds.Top),
+                        ScaledSize(25),
+                        ScaledSize(25)));
                     
                 }
                 //g.DrawImage(Properties.Resources.error, new Rectangle(bounds.Width - 28, (bounds.Height - 16) / 2 + bounds.Top, 16, 16));
@@ -160,7 +169,7 @@ namespace WindowTopMost
             if (Items.Count > 0)
             {
                 ProcessHnd item = Items[e.Index];
-                e.ItemHeight = 54;
+                e.ItemHeight = (int)(45 * DpiInfo.scale);
             }
 
         }

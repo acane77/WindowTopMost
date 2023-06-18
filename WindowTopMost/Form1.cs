@@ -21,6 +21,7 @@ namespace WindowTopMost
         public frmMain()
         {
             InitializeComponent();
+            float scale = DpiInfo.GetScale(this.Handle);
             string OSVersion = (string)Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion", "ProductName", null);
             IsWindows10 = OSVersion.IndexOf("10") >= 0;
             Control.CheckForIllegalCrossThreadCalls = false;
@@ -68,7 +69,9 @@ namespace WindowTopMost
                         description = pModule.FileVersionInfo.FileDescription;
                         processFileName = process.MainModule.ModuleName;
                     }
-                    catch {}
+                    catch(Exception e) {
+                        // MessageBox.Show(e.ToString());
+                    }
 
                     Bitmap bitmapUWP = null;
                     // 如果是UWP程序，获取UWP程序的图标
@@ -167,9 +170,16 @@ namespace WindowTopMost
             MessageBox.Show(WindowList[S].ToString());
         }
 
+        void ScaleControlSizeAndLocation(Control ctrl, float scale) {
+            ctrl.Scale(new SizeF { Height = scale, Width = scale });
+        }
+
         private void frmMain_Load(object sender, EventArgs e)
         {
             UpdateProcessList();
+
+            this.DpiChanged += FrmMain_DpiChanged;
+            ScaleControlSizeAndLocation(this, DpiInfo.scale);
 
             // Register events
             foreach (MenuItem menu in menuItemSetOpacity.MenuItems)
@@ -197,6 +207,13 @@ namespace WindowTopMost
                     };   
                 }
             }
+        }
+
+        private void FrmMain_DpiChanged(object sender, DpiChangedEventArgs e)
+        {
+            float scale = DpiInfo.GetScale(this.Handle);
+            ScaleControlSizeAndLocation(this, scale);
+            lstWindow.Invalidate();
         }
 
         void setTopmostState(int hnd)
