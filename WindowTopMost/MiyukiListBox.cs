@@ -136,7 +136,7 @@ namespace WindowTopMost
                     }
                 }
 
-                int fontLeft = bounds.Left + ScaledSize(40);
+                int fontLeft = bounds.Left + ScaledSize(45);
                 System.Drawing.Font font = new System.Drawing.Font("微软雅黑", 11);
                 System.Drawing.Font fontDesc = new System.Drawing.Font("微软雅黑", 9);
 
