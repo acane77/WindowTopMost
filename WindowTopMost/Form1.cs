@@ -23,7 +23,7 @@ namespace WindowTopMost
             InitializeComponent();
             float scale = DpiInfo.GetScale(this.Handle);
             string OSVersion = (string)Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion", "ProductName", null);
-            IsWindows10 = OSVersion.IndexOf("10") >= 0;
+            IsWindows10 = OSVersion.IndexOf("10") >= 0 || OSVersion.IndexOf("11") >= 0;
             Control.CheckForIllegalCrossThreadCalls = false;
 
             if (!IsWindows10)
