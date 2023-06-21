@@ -36,7 +36,9 @@ namespace WindowTopMost
 
         private void FormSetOpacity_Load(object sender, EventArgs e)
         {
-            float scale = DpiInfo.GetScale(this.Handle, false) / 1.75f;
+            float scale = DpiInfo.GetScale(this.Handle, false);
+            float scale_delta = scale - 1.0f;
+            scale -= scale_delta;
             Scale(new SizeF(scale, scale));
             trackBar1_Scroll(null, null);
         }

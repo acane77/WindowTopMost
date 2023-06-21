@@ -100,7 +100,7 @@
             this.buttonOK.Location = new System.Drawing.Point(518, 15);
             this.buttonOK.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.buttonOK.Name = "buttonOK";
-            this.buttonOK.Size = new System.Drawing.Size(174, 35);
+            this.buttonOK.Size = new System.Drawing.Size(174, 51);
             this.buttonOK.TabIndex = 5;
             this.buttonOK.Text = "确定";
             this.buttonOK.UseVisualStyleBackColor = true;
@@ -112,7 +112,7 @@
             this.buttonCancel.Location = new System.Drawing.Point(704, 15);
             this.buttonCancel.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.buttonCancel.Name = "buttonCancel";
-            this.buttonCancel.Size = new System.Drawing.Size(174, 35);
+            this.buttonCancel.Size = new System.Drawing.Size(174, 51);
             this.buttonCancel.TabIndex = 6;
             this.buttonCancel.Text = "取消";
             this.buttonCancel.UseVisualStyleBackColor = true;
@@ -124,10 +124,10 @@
             this.panel1.Controls.Add(this.buttonCancel);
             this.panel1.Controls.Add(this.buttonOK);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panel1.Location = new System.Drawing.Point(0, 157);
+            this.panel1.Location = new System.Drawing.Point(0, 173);
             this.panel1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(907, 68);
+            this.panel1.Size = new System.Drawing.Size(907, 81);
             this.panel1.TabIndex = 7;
             // 
             // FormSetOpacity
@@ -136,7 +136,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 24F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Window;
-            this.ClientSize = new System.Drawing.Size(907, 225);
+            this.ClientSize = new System.Drawing.Size(907, 254);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.txtTransparency);
             this.Controls.Add(this.label3);

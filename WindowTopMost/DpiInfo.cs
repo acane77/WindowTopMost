@@ -14,9 +14,10 @@ namespace WindowTopMost
         public static float GetScale(IntPtr window_ptr, bool make_public = true)
         {
             Graphics graphics = Graphics.FromHwnd(window_ptr);
+            float new_scale = graphics.DpiX / 96;
             if (make_public)
-                scale = graphics.DpiX / 96;
-            return scale;
+                scale = new_scale;
+            return new_scale;
         }
     }
 }
