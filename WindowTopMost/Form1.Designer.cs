@@ -37,6 +37,7 @@
             this.button_selected = new System.Windows.Forms.Button();
             this.panel3 = new System.Windows.Forms.Panel();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.lstWindow = new WindowTopMost.MiyukiListBox();
             this.contextMenu = new System.Windows.Forms.ContextMenu();
             this.menuItemWindowName = new System.Windows.Forms.MenuItem();
             this.menuItemProcessName = new System.Windows.Forms.MenuItem();
@@ -58,7 +59,6 @@
             this.menuItem8 = new System.Windows.Forms.MenuItem();
             this.menuGetInfo = new System.Windows.Forms.MenuItem();
             this.menuItemOpenLocation = new System.Windows.Forms.MenuItem();
-            this.lstWindow = new WindowTopMost.MiyukiListBox();
             this.panel1.SuspendLayout();
             this.panel3.SuspendLayout();
             this.panel2.SuspendLayout();
@@ -159,6 +159,24 @@
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(552, 526);
             this.panel2.TabIndex = 7;
+            // 
+            // lstWindow
+            // 
+            this.lstWindow.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.lstWindow.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lstWindow.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
+            this.lstWindow.FormattingEnabled = true;
+            this.lstWindow.HoverIndex = -1;
+            this.lstWindow.ItemHeight = 17;
+            this.lstWindow.Location = new System.Drawing.Point(0, 0);
+            this.lstWindow.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.lstWindow.Name = "lstWindow";
+            this.lstWindow.Size = new System.Drawing.Size(552, 526);
+            this.lstWindow.TabIndex = 1;
+            this.lstWindow.MouseClick += new System.Windows.Forms.MouseEventHandler(this.lstWindow_MouseClick);
+            this.lstWindow.SelectedIndexChanged += new System.EventHandler(this.lstWindow_SelectedIndexChanged);
+            this.lstWindow.DoubleClick += new System.EventHandler(this.lstWindow_DoubleClick);
+            this.lstWindow.MouseUp += new System.Windows.Forms.MouseEventHandler(this.lstWindow_MouseUp);
             // 
             // contextMenu
             // 
@@ -296,27 +314,9 @@
             this.menuItemOpenLocation.Text = "打开进程位置(&O)";
             this.menuItemOpenLocation.Click += new System.EventHandler(this.menuItemOpenLocation_Click);
             // 
-            // lstWindow
-            // 
-            this.lstWindow.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.lstWindow.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lstWindow.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
-            this.lstWindow.FormattingEnabled = true;
-            this.lstWindow.HoverIndex = -1;
-            this.lstWindow.ItemHeight = 17;
-            this.lstWindow.Location = new System.Drawing.Point(0, 0);
-            this.lstWindow.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.lstWindow.Name = "lstWindow";
-            this.lstWindow.Size = new System.Drawing.Size(552, 526);
-            this.lstWindow.TabIndex = 1;
-            this.lstWindow.MouseClick += new System.Windows.Forms.MouseEventHandler(this.lstWindow_MouseClick);
-            this.lstWindow.SelectedIndexChanged += new System.EventHandler(this.lstWindow_SelectedIndexChanged);
-            this.lstWindow.DoubleClick += new System.EventHandler(this.lstWindow_DoubleClick);
-            this.lstWindow.MouseUp += new System.Windows.Forms.MouseEventHandler(this.lstWindow_MouseUp);
-            // 
             // frmMain
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(14F, 31F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(552, 575);
             this.Controls.Add(this.panel2);
@@ -326,7 +326,7 @@
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.MinimumSize = new System.Drawing.Size(350, 350);
             this.Name = "frmMain";
-            this.Text = "Window Top-Mostify";
+            this.Text = "Window Top Most";
             this.Load += new System.EventHandler(this.frmMain_Load);
             this.panel1.ResumeLayout(false);
             this.panel3.ResumeLayout(false);

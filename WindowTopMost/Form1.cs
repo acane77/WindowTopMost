@@ -85,9 +85,29 @@ namespace WindowTopMost
                             {
                                 bitmapUWP = new Bitmap(logoPath);
                                 Bitmap bitmapBackground = new Bitmap(bitmapUWP.Width, bitmapUWP.Height);
-                                for (int i=0; i< bitmapUWP.Width; i++)
-                                    for (int j=0; j< bitmapUWP.Height; j++)
-                                        bitmapBackground.SetPixel(i, j, Color.FromArgb(255, 128, 128));
+                                
+                                int TotalPixels = 0;
+                                int WhitePixels = 0;
+                                for (int i = 0; i < bitmapUWP.Height; i++) 
+                                {
+                                    for (int j = 0; j < bitmapUWP.Height; j++)
+                                    {
+                                        Color color = bitmapUWP.GetPixel(i, j);
+                                        if (color == null || color.A != 255) {
+                                            continue;
+                                        }
+                                        TotalPixels++;
+                                        if (color.R == 255 && color.G == 255 && color.B == 255)
+                                        {
+                                            WhitePixels++;
+                                        }
+                                    }
+                                }
+                                if (TotalPixels != 0 && WhitePixels * 100 / TotalPixels >= 80) {
+                                    for (int i=0; i< bitmapUWP.Width; i++)
+                                        for (int j=0; j< bitmapUWP.Height; j++)
+                                            bitmapBackground.SetPixel(i, j, Color.FromArgb(255, 128, 128));
+                                }
                                 using (Graphics gr = Graphics.FromImage(bitmapBackground))
                                 {
                                     gr.DrawImage(bitmapUWP, new PointF(0,0));
