@@ -151,6 +151,13 @@ namespace WindowTopMost
             IntPtr[] phiconLarge, IntPtr[] phiconSmall, uint nIcons);
 
         /// <summary>
+        /// 销毁图标并释放图标占用的内存
+        /// </summary>
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool DestroyIcon(IntPtr hIcon);
+
+        /// <summary>
         /// filter function
         /// </summary>
         /// <param name="hWnd"></param>

@@ -186,18 +186,33 @@ namespace WindowTopMost
 
                     if (hIcon != IntPtr.Zero)
                     {
-                        bitmap = Icon.FromHandle(hIcon).ToBitmap();
+                        using (Icon icon = Icon.FromHandle(hIcon))
+                        {
+                            bitmap = icon.ToBitmap();
+                        }
                     }
                     else
                     {
-                        bitmap = Icon.FromHandle(WinAPI.LoadIcon(IntPtr.Zero, (IntPtr)WinAPI.SystemIcons.IDI_APPLICATION)).ToBitmap();
+                        IntPtr sysIcon = WinAPI.LoadIcon(IntPtr.Zero, (IntPtr)WinAPI.SystemIcons.IDI_APPLICATION);
+                        if (sysIcon != IntPtr.Zero)
+                        {
+                            using (Icon icon = Icon.FromHandle(sysIcon))
+                            {
+                                bitmap = icon.ToBitmap();
+                            }
+                        }
                     }
                     // try get application icon
-                    if (hIcon == IntPtr.Zero)
+                    if (bitmap == null && hIcon == IntPtr.Zero)
                     {
                         hIcon = extractIconFromFile(processPath);
                         if (hIcon != IntPtr.Zero)
-                            bitmap = Icon.FromHandle(hIcon).ToBitmap();
+                        {
+                            using (Icon icon = Icon.FromHandle(hIcon))
+                            {
+                                bitmap = icon.ToBitmap();
+                            }
+                        }
                     }
                     
 
@@ -330,18 +345,33 @@ namespace WindowTopMost
 
                         if (hIcon != IntPtr.Zero)
                         {
-                            bitmap = Icon.FromHandle(hIcon).ToBitmap();
+                            using (Icon icon = Icon.FromHandle(hIcon))
+                            {
+                                bitmap = icon.ToBitmap();
+                            }
                         }
                         else
                         {
-                            bitmap = Icon.FromHandle(WinAPI.LoadIcon(IntPtr.Zero, (IntPtr)WinAPI.SystemIcons.IDI_APPLICATION)).ToBitmap();
+                            IntPtr sysIcon = WinAPI.LoadIcon(IntPtr.Zero, (IntPtr)WinAPI.SystemIcons.IDI_APPLICATION);
+                            if (sysIcon != IntPtr.Zero)
+                            {
+                                using (Icon icon = Icon.FromHandle(sysIcon))
+                                {
+                                    bitmap = icon.ToBitmap();
+                                }
+                            }
                         }
                         // try get application icon
-                        if (hIcon == IntPtr.Zero)
+                        if (bitmap == null && hIcon == IntPtr.Zero)
                         {
                             hIcon = extractIconFromFile(processPath);
                             if (hIcon != IntPtr.Zero)
-                                bitmap = Icon.FromHandle(hIcon).ToBitmap();
+                            {
+                                using (Icon icon = Icon.FromHandle(hIcon))
+                                {
+                                    bitmap = icon.ToBitmap();
+                                }
+                            }
                         }
 
                         tempList.Add(new ProcessHnd()
@@ -669,7 +699,20 @@ namespace WindowTopMost
             IntPtr[] L = new IntPtr[1] { IntPtr.Zero };
             IntPtr[] S = new IntPtr[1] { IntPtr.Zero };
             WinAPI.ExtractIconEx(filename, 0, L, S, 1);
-            return L[0] == IntPtr.Zero ? S[0] : L[0];
+            
+            IntPtr result = L[0] == IntPtr.Zero ? S[0] : L[0];
+            
+            // 释放未使用的图标句柄，避免资源泄漏
+            if (result == L[0] && S[0] != IntPtr.Zero)
+            {
+                WinAPI.DestroyIcon(S[0]);
+            }
+            else if (result == S[0] && L[0] != IntPtr.Zero)
+            {
+                WinAPI.DestroyIcon(L[0]);
+            }
+            
+            return result;
         }
 
         private void lstWindow_DoubleClick(object sender, EventArgs e)
