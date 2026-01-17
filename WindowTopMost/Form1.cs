@@ -710,6 +710,95 @@ namespace WindowTopMost
             menuOpenProcLocation_Click(sender, e);
         }
 
+        private void menuItemSaveScreenshot_Click(object sender, EventArgs e)
+        {
+            if (thisItem == null || thisItem.Handle == IntPtr.Zero)
+            {
+                MessageBox.Show("无法获取窗口句柄。", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            // 获取窗口矩形
+            WinAPI.RECT rect;
+            if (!WinAPI.GetWindowRect(thisItem.Handle, out rect))
+            {
+                MessageBox.Show("无法获取窗口位置和大小。", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            int width = rect.Right - rect.Left;
+            int height = rect.Bottom - rect.Top;
+
+            if (width <= 0 || height <= 0)
+            {
+                MessageBox.Show("窗口大小无效。", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            // 创建Bitmap
+            using (Bitmap bitmap = new Bitmap(width, height))
+            {
+                using (Graphics g = Graphics.FromImage(bitmap))
+                {
+                    IntPtr hdc = g.GetHdc();
+                    try
+                    {
+                        // 使用PrintWindow API将窗口内容复制到Bitmap
+                        bool success = WinAPI.PrintWindow(thisItem.Handle, hdc, 0);
+                        if (!success)
+                        {
+                            // 如果PrintWindow失败，尝试使用BitBlt作为备选方案
+                            IntPtr hdcSrc = WinAPI.GetWindowDC(thisItem.Handle);
+                            if (hdcSrc != IntPtr.Zero)
+                            {
+                                WinAPI.BitBlt(hdc, 0, 0, width, height, hdcSrc, 0, 0, WinAPI.SRCCOPY);
+                                WinAPI.ReleaseDC(thisItem.Handle, hdcSrc);
+                            }
+                            else
+                            {
+                                MessageBox.Show("无法捕获窗口内容。", this.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                return;
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        g.ReleaseHdc(hdc);
+                    }
+                }
+
+                // 保存文件对话框
+                using (SaveFileDialog saveDialog = new SaveFileDialog())
+                {
+                    saveDialog.Filter = "PNG图片|*.png|JPEG图片|*.jpg|BMP图片|*.bmp";
+                    saveDialog.FilterIndex = 1;
+                    saveDialog.FileName = thisItem.WindowName.Replace("|", "_").Replace("\\", "_").Replace("/", "_").Replace(":", "_") + ".png";
+                    
+                    if (saveDialog.ShowDialog() == DialogResult.OK)
+                    {
+                        // 根据文件扩展名选择保存格式
+                        System.Drawing.Imaging.ImageFormat format = System.Drawing.Imaging.ImageFormat.Png;
+                        string extension = System.IO.Path.GetExtension(saveDialog.FileName).ToLower();
+                        if (extension == ".jpg" || extension == ".jpeg")
+                            format = System.Drawing.Imaging.ImageFormat.Jpeg;
+                        else if (extension == ".bmp")
+                            format = System.Drawing.Imaging.ImageFormat.Bmp;
+
+                        try
+                        {
+                            bitmap.Save(saveDialog.FileName, format);
+                            MessageBox.Show("窗口截图已保存到：\r\n" + saveDialog.FileName, this.Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show("保存文件时发生错误：\r\n" + ex.Message, this.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
+                }
+            }
+        }
+
+
         private void menuGetInfo_Click(object sender, EventArgs e)
         {
             MiyukiListBox lst = (MiyukiListBox)lstWindow;

@@ -337,5 +337,40 @@ namespace WindowTopMost
 
         [DllImport("kernel32.dll")]
         public static extern int GetProcessId(IntPtr handle);
+
+        /// <summary>
+        /// 将窗口内容复制到指定的设备上下文（DC）
+        /// </summary>
+        /// <param name="hwnd">要复制的窗口句柄</param>
+        /// <param name="hdcBlt">目标设备上下文的句柄</param>
+        /// <param name="nFlags">打印标志，0 = PW_CLIENTONLY（仅打印客户区）</param>
+        /// <returns>如果成功，返回非零值；如果失败，返回零</returns>
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool PrintWindow(IntPtr hwnd, IntPtr hdcBlt, uint nFlags);
+
+        public const uint PW_CLIENTONLY = 0x00000001;
+        public const uint PW_RENDERFULLCONTENT = 0x00000002;
+
+        /// <summary>
+        /// 将源设备上下文中的矩形区域复制到目标设备上下文
+        /// </summary>
+        [DllImport("gdi32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool BitBlt(IntPtr hObject, int nXDest, int nYDest, int nWidth, int nHeight, IntPtr hObjectSource, int nXSrc, int nYSrc, uint dwRop);
+        
+        /// <summary>
+        /// 获取指定窗口的设备上下文（DC）
+        /// </summary>
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetWindowDC(IntPtr hWnd);
+        
+        /// <summary>
+        /// 释放设备上下文
+        /// </summary>
+        [DllImport("user32.dll")]
+        public static extern IntPtr ReleaseDC(IntPtr hWnd, IntPtr hDC);
+
+        public const uint SRCCOPY = 0x00CC0020;
     }
 }

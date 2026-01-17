@@ -71,6 +71,7 @@
             this.menuItem8 = new System.Windows.Forms.MenuItem();
             this.menuGetInfo = new System.Windows.Forms.MenuItem();
             this.menuItemOpenLocation = new System.Windows.Forms.MenuItem();
+            this.menuItemSaveScreenshot = new System.Windows.Forms.MenuItem();
             this.panel1.SuspendLayout();
             this.panel3.SuspendLayout();
             this.panel2.SuspendLayout();
@@ -204,7 +205,8 @@
             this.menuItemSetOpacity,
             this.menuItem8,
             this.menuGetInfo,
-            this.menuItemOpenLocation});
+            this.menuItemOpenLocation,
+            this.menuItemSaveScreenshot});
             // 
             // menuItemWindowName
             // 
@@ -326,6 +328,12 @@
             this.menuItemOpenLocation.Text = "打开进程位置(&O)";
             this.menuItemOpenLocation.Click += new System.EventHandler(this.menuItemOpenLocation_Click);
             // 
+            // menuItemSaveScreenshot
+            // 
+            this.menuItemSaveScreenshot.Index = 12;
+            this.menuItemSaveScreenshot.Text = "保存窗口截图到文件(&F)";
+            this.menuItemSaveScreenshot.Click += new System.EventHandler(this.menuItemSaveScreenshot_Click);
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(14F, 31F);
@@ -378,6 +386,7 @@
         private System.Windows.Forms.MenuItem menuItemSetOpacityTo0;
         private System.Windows.Forms.MenuItem menuItem12;
         private System.Windows.Forms.MenuItem menuItemSetOpacityToCustomValue;
+        private System.Windows.Forms.MenuItem menuItemSaveScreenshot;
     }
 }
 
