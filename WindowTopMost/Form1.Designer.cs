@@ -13,9 +13,21 @@
         /// <param name="disposing">如果应释放托管资源，为 true；否则为 false。</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing)
             {
-                components.Dispose();
+                if (components != null)
+                {
+                    components.Dispose();
+                }
+                // 释放 WindowList 中的资源
+                if (WindowList != null)
+                {
+                    foreach (ProcessHnd item in WindowList)
+                    {
+                        item?.Dispose();
+                    }
+                    WindowList.Clear();
+                }
             }
             base.Dispose(disposing);
         }

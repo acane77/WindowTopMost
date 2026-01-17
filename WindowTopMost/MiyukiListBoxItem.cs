@@ -52,7 +52,16 @@ namespace WindowTopMost
 
         public void Dispose()
         {
-            
+            if (Icon != null)
+            {
+                Icon.Dispose();
+                Icon = null;
+            }
+            if (ProcessObject != null)
+            {
+                ProcessObject.Dispose();
+                ProcessObject = null;
+            }
         }
     }
 }

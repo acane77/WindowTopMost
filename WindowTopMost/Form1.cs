@@ -79,40 +79,41 @@ namespace WindowTopMost
                         UWPProcess.AppxPackage appxPackage = UWPProcess.AppxPackage.FromProcess(process);
                         if (appxPackage != null)
                         {
-                            string logoPath = appxPackage.FindHighestScaleQualifiedImagePath(appxPackage.Logo);
-                            if (logoPath != null)
-                            {
-                                bitmapUWP = new Bitmap(logoPath);
-                                Bitmap bitmapBackground = new Bitmap(bitmapUWP.Width, bitmapUWP.Height);
-                                
-                                int TotalPixels = 0;
-                                int WhitePixels = 0;
-                                for (int i = 0; i < bitmapUWP.Height; i++) 
+                                string logoPath = appxPackage.FindHighestScaleQualifiedImagePath(appxPackage.Logo);
+                                if (logoPath != null)
                                 {
-                                    for (int j = 0; j < bitmapUWP.Height; j++)
+                                    Bitmap originalBitmap = new Bitmap(logoPath);
+                                    Bitmap bitmapBackground = new Bitmap(originalBitmap.Width, originalBitmap.Height);
+                                    
+                                    int TotalPixels = 0;
+                                    int WhitePixels = 0;
+                                    for (int i = 0; i < originalBitmap.Height; i++) 
                                     {
-                                        Color color = bitmapUWP.GetPixel(i, j);
-                                        if (color == null || color.A != 255) {
-                                            continue;
-                                        }
-                                        TotalPixels++;
-                                        if (color.R == 255 && color.G == 255 && color.B == 255)
+                                        for (int j = 0; j < originalBitmap.Height; j++)
                                         {
-                                            WhitePixels++;
+                                            Color color = originalBitmap.GetPixel(i, j);
+                                            if (color == null || color.A != 255) {
+                                                continue;
+                                            }
+                                            TotalPixels++;
+                                            if (color.R == 255 && color.G == 255 && color.B == 255)
+                                            {
+                                                WhitePixels++;
+                                            }
                                         }
                                     }
+                                    if (TotalPixels != 0 && WhitePixels * 100 / TotalPixels >= 80) {
+                                        for (int i=0; i< originalBitmap.Width; i++)
+                                            for (int j=0; j< originalBitmap.Height; j++)
+                                                bitmapBackground.SetPixel(i, j, Color.FromArgb(255, 128, 128));
+                                    }
+                                    using (Graphics gr = Graphics.FromImage(bitmapBackground))
+                                    {
+                                        gr.DrawImage(originalBitmap, new PointF(0,0));
+                                    }
+                                    originalBitmap.Dispose();
+                                    bitmapUWP = bitmapBackground;
                                 }
-                                if (TotalPixels != 0 && WhitePixels * 100 / TotalPixels >= 80) {
-                                    for (int i=0; i< bitmapUWP.Width; i++)
-                                        for (int j=0; j< bitmapUWP.Height; j++)
-                                            bitmapBackground.SetPixel(i, j, Color.FromArgb(255, 128, 128));
-                                }
-                                using (Graphics gr = Graphics.FromImage(bitmapBackground))
-                                {
-                                    gr.DrawImage(bitmapUWP, new PointF(0,0));
-                                }
-                                bitmapUWP = bitmapBackground;
-                            }
                         }
                     }
 
@@ -168,6 +169,13 @@ namespace WindowTopMost
             }
 
             btnRefresh.Enabled = false;
+            
+            // 释放旧资源
+            foreach (ProcessHnd item in WindowList)
+            {
+                item?.Dispose();
+            }
+            
             if (!RefreshWindowList())
             {
                 MessageBox.Show("Get window list failed");
@@ -234,16 +242,16 @@ namespace WindowTopMost
                                 string logoPath = appxPackage.FindHighestScaleQualifiedImagePath(appxPackage.Logo);
                                 if (logoPath != null)
                                 {
-                                    bitmapUWP = new Bitmap(logoPath);
-                                    Bitmap bitmapBackground = new Bitmap(bitmapUWP.Width, bitmapUWP.Height);
+                                    Bitmap originalBitmap = new Bitmap(logoPath);
+                                    Bitmap bitmapBackground = new Bitmap(originalBitmap.Width, originalBitmap.Height);
 
                                     int TotalPixels = 0;
                                     int WhitePixels = 0;
-                                    for (int i = 0; i < bitmapUWP.Height; i++)
+                                    for (int i = 0; i < originalBitmap.Height; i++)
                                     {
-                                        for (int j = 0; j < bitmapUWP.Height; j++)
+                                        for (int j = 0; j < originalBitmap.Height; j++)
                                         {
-                                            Color color = bitmapUWP.GetPixel(i, j);
+                                            Color color = originalBitmap.GetPixel(i, j);
                                             if (color == null || color.A != 255)
                                             {
                                                 continue;
@@ -257,14 +265,15 @@ namespace WindowTopMost
                                     }
                                     if (TotalPixels != 0 && WhitePixels * 100 / TotalPixels >= 80)
                                     {
-                                        for (int i = 0; i < bitmapUWP.Width; i++)
-                                            for (int j = 0; j < bitmapUWP.Height; j++)
+                                        for (int i = 0; i < originalBitmap.Width; i++)
+                                            for (int j = 0; j < originalBitmap.Height; j++)
                                                 bitmapBackground.SetPixel(i, j, Color.FromArgb(255, 128, 128));
                                     }
                                     using (Graphics gr = Graphics.FromImage(bitmapBackground))
                                     {
-                                        gr.DrawImage(bitmapUWP, new PointF(0, 0));
+                                        gr.DrawImage(originalBitmap, new PointF(0, 0));
                                     }
+                                    originalBitmap.Dispose();
                                     bitmapUWP = bitmapBackground;
                                 }
                             }
@@ -318,6 +327,11 @@ namespace WindowTopMost
             {
                 this.Invoke(new Action(() =>
                 {
+                    // 释放旧资源
+                    foreach (ProcessHnd item in WindowList)
+                    {
+                        item?.Dispose();
+                    }
                     WindowList.Clear();
                     WindowList.AddRange(newWindowList);
                     lstWindow.Items.Clear();
@@ -331,6 +345,11 @@ namespace WindowTopMost
             }
             else
             {
+                // 释放旧资源
+                foreach (ProcessHnd item in WindowList)
+                {
+                    item?.Dispose();
+                }
                 WindowList.Clear();
                 WindowList.AddRange(newWindowList);
                 lstWindow.Items.Clear();
