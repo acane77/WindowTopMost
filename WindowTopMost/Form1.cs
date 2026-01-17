@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -34,6 +35,84 @@ namespace WindowTopMost
         List<ProcessHnd> WindowList = new List<ProcessHnd>();
         ProcessHnd thisItem = null;
         bool IsWindows10 = false;
+
+        /// <summary>
+        /// 使用LockBits优化统计白色像素比例（Alpha=255的像素中白色像素的比例）
+        /// </summary>
+        private bool IsMostlyWhite(Bitmap bitmap, int thresholdPercent = 80)
+        {
+            int totalPixels = 0;
+            int whitePixels = 0;
+
+            BitmapData data = bitmap.LockBits(
+                new Rectangle(0, 0, bitmap.Width, bitmap.Height),
+                ImageLockMode.ReadOnly,
+                PixelFormat.Format32bppArgb);
+
+            unsafe
+            {
+                byte* ptr = (byte*)data.Scan0;
+                int stride = data.Stride;
+
+                for (int y = 0; y < bitmap.Height; y++)
+                {
+                    byte* row = ptr + (y * stride);
+                    for (int x = 0; x < bitmap.Width; x++)
+                    {
+                        int offset = x * 4; // 32bppArgb = 4 bytes per pixel (B, G, R, A)
+                        byte b = row[offset];
+                        byte g = row[offset + 1];
+                        byte r = row[offset + 2];
+                        byte a = row[offset + 3];
+
+                        if (a == 255) // 只统计不透明的像素
+                        {
+                            totalPixels++;
+                            if (r == 255 && g == 255 && b == 255)
+                            {
+                                whitePixels++;
+                            }
+                        }
+                    }
+                }
+            }
+
+            bitmap.UnlockBits(data);
+
+            return totalPixels > 0 && (whitePixels * 100 / totalPixels) >= thresholdPercent;
+        }
+
+        /// <summary>
+        /// 使用LockBits优化填充背景色
+        /// </summary>
+        private void FillBackgroundColor(Bitmap bitmap, Color color)
+        {
+            BitmapData data = bitmap.LockBits(
+                new Rectangle(0, 0, bitmap.Width, bitmap.Height),
+                ImageLockMode.WriteOnly,
+                PixelFormat.Format32bppArgb);
+
+            unsafe
+            {
+                byte* ptr = (byte*)data.Scan0;
+                int stride = data.Stride;
+
+                for (int y = 0; y < bitmap.Height; y++)
+                {
+                    byte* row = ptr + (y * stride);
+                    for (int x = 0; x < bitmap.Width; x++)
+                    {
+                        int offset = x * 4; // 32bppArgb = 4 bytes per pixel (B, G, R, A)
+                        row[offset] = color.B;     // Blue
+                        row[offset + 1] = color.G; // Green
+                        row[offset + 2] = color.R; // Red
+                        row[offset + 3] = color.A; // Alpha
+                    }
+                }
+            }
+
+            bitmap.UnlockBits(data);
+        }
 
         bool RefreshWindowList()
         {
@@ -79,41 +158,25 @@ namespace WindowTopMost
                         UWPProcess.AppxPackage appxPackage = UWPProcess.AppxPackage.FromProcess(process);
                         if (appxPackage != null)
                         {
-                                string logoPath = appxPackage.FindHighestScaleQualifiedImagePath(appxPackage.Logo);
-                                if (logoPath != null)
+                            string logoPath = appxPackage.FindHighestScaleQualifiedImagePath(appxPackage.Logo);
+                            if (logoPath != null)
+                            {
+                                Bitmap originalBitmap = new Bitmap(logoPath);
+                                Bitmap bitmapBackground = new Bitmap(originalBitmap.Width, originalBitmap.Height);
+                                
+                                // 使用优化的方法检查是否主要是白色
+                                if (IsMostlyWhite(originalBitmap, 80))
                                 {
-                                    Bitmap originalBitmap = new Bitmap(logoPath);
-                                    Bitmap bitmapBackground = new Bitmap(originalBitmap.Width, originalBitmap.Height);
-                                    
-                                    int TotalPixels = 0;
-                                    int WhitePixels = 0;
-                                    for (int i = 0; i < originalBitmap.Height; i++) 
-                                    {
-                                        for (int j = 0; j < originalBitmap.Height; j++)
-                                        {
-                                            Color color = originalBitmap.GetPixel(i, j);
-                                            if (color == null || color.A != 255) {
-                                                continue;
-                                            }
-                                            TotalPixels++;
-                                            if (color.R == 255 && color.G == 255 && color.B == 255)
-                                            {
-                                                WhitePixels++;
-                                            }
-                                        }
-                                    }
-                                    if (TotalPixels != 0 && WhitePixels * 100 / TotalPixels >= 80) {
-                                        for (int i=0; i< originalBitmap.Width; i++)
-                                            for (int j=0; j< originalBitmap.Height; j++)
-                                                bitmapBackground.SetPixel(i, j, Color.FromArgb(255, 128, 128));
-                                    }
-                                    using (Graphics gr = Graphics.FromImage(bitmapBackground))
-                                    {
-                                        gr.DrawImage(originalBitmap, new PointF(0,0));
-                                    }
-                                    originalBitmap.Dispose();
-                                    bitmapUWP = bitmapBackground;
+                                    FillBackgroundColor(bitmapBackground, Color.FromArgb(255, 128, 128));
                                 }
+                                
+                                using (Graphics gr = Graphics.FromImage(bitmapBackground))
+                                {
+                                    gr.DrawImage(originalBitmap, new PointF(0, 0));
+                                }
+                                originalBitmap.Dispose();
+                                bitmapUWP = bitmapBackground;
+                            }
                         }
                     }
 
@@ -245,30 +308,12 @@ namespace WindowTopMost
                                     Bitmap originalBitmap = new Bitmap(logoPath);
                                     Bitmap bitmapBackground = new Bitmap(originalBitmap.Width, originalBitmap.Height);
 
-                                    int TotalPixels = 0;
-                                    int WhitePixels = 0;
-                                    for (int i = 0; i < originalBitmap.Height; i++)
+                                    // 使用优化的方法检查是否主要是白色
+                                    if (IsMostlyWhite(originalBitmap, 80))
                                     {
-                                        for (int j = 0; j < originalBitmap.Height; j++)
-                                        {
-                                            Color color = originalBitmap.GetPixel(i, j);
-                                            if (color == null || color.A != 255)
-                                            {
-                                                continue;
-                                            }
-                                            TotalPixels++;
-                                            if (color.R == 255 && color.G == 255 && color.B == 255)
-                                            {
-                                                WhitePixels++;
-                                            }
-                                        }
+                                        FillBackgroundColor(bitmapBackground, Color.FromArgb(255, 128, 128));
                                     }
-                                    if (TotalPixels != 0 && WhitePixels * 100 / TotalPixels >= 80)
-                                    {
-                                        for (int i = 0; i < originalBitmap.Width; i++)
-                                            for (int j = 0; j < originalBitmap.Height; j++)
-                                                bitmapBackground.SetPixel(i, j, Color.FromArgb(255, 128, 128));
-                                    }
+                                    
                                     using (Graphics gr = Graphics.FromImage(bitmapBackground))
                                     {
                                         gr.DrawImage(originalBitmap, new PointF(0, 0));
