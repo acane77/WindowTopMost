@@ -379,5 +379,58 @@ namespace WindowTopMost
         public static extern IntPtr ReleaseDC(IntPtr hWnd, IntPtr hDC);
 
         public const uint SRCCOPY = 0x00CC0020;
+
+        // SHGetFileInfo 相关定义，用于获取文件类型的默认图标（会返回系统当前样式的图标）
+        [DllImport("shell32.dll", CharSet = CharSet.Auto)]
+        private static extern IntPtr SHGetFileInfo(string pszPath, uint dwFileAttributes, ref SHFILEINFO psfi, uint cbSizeFileInfo, uint uFlags);
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct SHFILEINFO
+        {
+            public IntPtr hIcon;
+            public int iIcon;
+            public uint dwAttributes;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
+            public string szDisplayName;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 80)]
+            public string szTypeName;
+        }
+
+        private const uint SHGFI_ICON = 0x000000100;
+        private const uint SHGFI_LARGEICON = 0x000000000;
+        private const uint SHGFI_USEFILEATTRIBUTES = 0x000000010;
+        private const uint FILE_ATTRIBUTE_NORMAL = 0x00000080;
+
+        /// <summary>
+        /// 获取新样式的默认应用程序图标（Win10/Win11样式），如果失败则回退到旧样式（兼容Windows 7）
+        /// 使用 SHGetFileInfo 获取 .exe 文件类型的默认图标，这会返回系统当前使用的图标样式
+        /// </summary>
+        /// <returns>图标句柄，如果失败返回 IntPtr.Zero</returns>
+        public static IntPtr GetModernApplicationIcon()
+        {
+            try
+            {
+                // 使用 SHGetFileInfo 获取 .exe 文件类型的默认图标
+                // 在 Win10/Win11 上会返回新样式图标，在 Win7 上会返回旧样式图标
+                SHFILEINFO shfi = new SHFILEINFO();
+                IntPtr result = SHGetFileInfo(".exe", 
+                    FILE_ATTRIBUTE_NORMAL, 
+                    ref shfi, 
+                    (uint)Marshal.SizeOf(typeof(SHFILEINFO)), 
+                    SHGFI_ICON | SHGFI_LARGEICON | SHGFI_USEFILEATTRIBUTES);
+                
+                if (result != IntPtr.Zero && shfi.hIcon != IntPtr.Zero)
+                {
+                    return shfi.hIcon;
+                }
+            }
+            catch
+            {
+                // 如果 API 调用失败，回退到旧方法
+            }
+            
+            // 回退到旧的 LoadIcon 方法（兼容 Windows 7）
+            return LoadIcon(IntPtr.Zero, (IntPtr)SystemIcons.IDI_APPLICATION);
+        }
     }
 }

@@ -193,7 +193,7 @@ namespace WindowTopMost
                     }
                     else
                     {
-                        IntPtr sysIcon = WinAPI.LoadIcon(IntPtr.Zero, (IntPtr)WinAPI.SystemIcons.IDI_APPLICATION);
+                        IntPtr sysIcon = WinAPI.GetModernApplicationIcon();
                         if (sysIcon != IntPtr.Zero)
                         {
                             using (Icon icon = Icon.FromHandle(sysIcon))
@@ -352,7 +352,7 @@ namespace WindowTopMost
                         }
                         else
                         {
-                            IntPtr sysIcon = WinAPI.LoadIcon(IntPtr.Zero, (IntPtr)WinAPI.SystemIcons.IDI_APPLICATION);
+                            IntPtr sysIcon = WinAPI.GetModernApplicationIcon();
                             if (sysIcon != IntPtr.Zero)
                             {
                                 using (Icon icon = Icon.FromHandle(sysIcon))
