@@ -7,6 +7,8 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -458,7 +460,52 @@ namespace WindowTopMost
         {
             UpdateProcessListAsync();
 
-            this.DpiChanged += FrmMain_DpiChanged;
+            // 检查 DpiChanged 事件和 DpiChangedEventArgs 类型是否存在（.NET Framework 4.7+）
+            // 在 Windows 7 上的 .NET Framework 4.0/4.5 中不存在此事件和类型
+            bool isNetFramework47OrHigher = false;
+            try
+            {
+                Type dpiChangedEventArgsType = Type.GetType("System.Windows.Forms.DpiChangedEventArgs, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089");
+                EventInfo dpiChangedEvent = typeof(Form).GetEvent("DpiChanged");
+                if (dpiChangedEventArgsType != null && dpiChangedEvent != null)
+                {
+                    isNetFramework47OrHigher = true;
+                    // 使用表达式树动态创建委托，避免在编译时引用 DpiChangedEventArgs
+                    MethodInfo handlerMethod = typeof(frmMain).GetMethod("FrmMain_DpiChangedWrapper", 
+                        BindingFlags.NonPublic | BindingFlags.Instance);
+                    if (handlerMethod != null)
+                    {
+                        // 创建表达式树来包装方法调用
+                        ParameterExpression senderParam = Expression.Parameter(typeof(object), "sender");
+                        ParameterExpression eParam = Expression.Parameter(dpiChangedEventArgsType, "e");
+                        // 将 eParam 转换为 object 以匹配包装方法的签名
+                        UnaryExpression eParamAsObject = Expression.Convert(eParam, typeof(object));
+                        MethodCallExpression call = Expression.Call(
+                            Expression.Constant(this),
+                            handlerMethod,
+                            senderParam,
+                            eParamAsObject);
+                        LambdaExpression lambda = Expression.Lambda(dpiChangedEvent.EventHandlerType, call, senderParam, eParam);
+                        Delegate handler = lambda.Compile();
+                        dpiChangedEvent.AddEventHandler(this, handler);
+                    }
+                }
+            }
+            catch
+            {
+                // 如果事件或类型不存在，忽略 DPI 变化事件订阅
+            }
+
+            // 如果 .NET Framework 版本低于 4.7，显示提示框
+            if (!isNetFramework47OrHigher)
+            {
+                MessageBox.Show(
+                    "请将 .NET Framework 升级到 4.7 以上以获得高 DPI 适配",
+                    "提示",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+            
             ScaleControlSizeAndLocation(this, DpiInfo.scale);
 
             // Register events
@@ -489,11 +536,32 @@ namespace WindowTopMost
             }
         }
 
-        private void FrmMain_DpiChanged(object sender, DpiChangedEventArgs e)
+        // 包装方法，用于通过反射订阅 DpiChanged 事件
+        // 使用 dynamic 类型以避免在编译时引用 DpiChangedEventArgs
+        private void FrmMain_DpiChangedWrapper(object sender, object e)
         {
-            float scale = DpiInfo.GetScale(this.Handle);
-            ScaleControlSizeAndLocation(this, scale);
-            lstWindow.Invalidate();
+            FrmMain_DpiChanged(sender, e as EventArgs);
+        }
+
+        private void FrmMain_DpiChanged(object sender, EventArgs e)
+        {
+            // 在 .NET Framework 4.0/4.5 中，DpiChangedEventArgs 不存在
+            // 使用反射来安全地访问属性（如果存在）
+            try
+            {
+                Type dpiChangedEventArgsType = e.GetType();
+                if (dpiChangedEventArgsType.Name == "DpiChangedEventArgs")
+                {
+                    // 在 .NET Framework 4.7+ 中，可以访问 DpiChangedEventArgs 的属性
+                    float scale = DpiInfo.GetScale(this.Handle);
+                    ScaleControlSizeAndLocation(this, scale);
+                    lstWindow.Invalidate();
+                }
+            }
+            catch
+            {
+                // 如果类型不匹配或访问失败，忽略
+            }
         }
 
         void setTopmostState(int hnd)
