@@ -24,7 +24,6 @@ namespace WindowTopMost
             float scale = DpiInfo.GetScale(this.Handle);
             string OSVersion = (string)Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion", "ProductName", null);
             IsWindows10 = OSVersion.IndexOf("10") >= 0 || OSVersion.IndexOf("11") >= 0;
-            Control.CheckForIllegalCrossThreadCalls = false;
 
             if (!IsWindows10)
             {
@@ -162,10 +161,17 @@ namespace WindowTopMost
 
         void UpdateProcessList()
         {
+            if (btnRefresh.InvokeRequired)
+            {
+                btnRefresh.Invoke(new Action(UpdateProcessList));
+                return;
+            }
+
             btnRefresh.Enabled = false;
             if (!RefreshWindowList())
             {
                 MessageBox.Show("Get window list failed");
+                btnRefresh.Enabled = true;
                 return;
             }
             lstWindow.Items.Clear();
@@ -176,10 +182,170 @@ namespace WindowTopMost
             btnRefresh.Enabled = true;
         }
 
+        async void UpdateProcessListAsync()
+        {
+            btnRefresh.Enabled = false;
+            
+            List<ProcessHnd> newWindowList = await Task.Run(() =>
+            {
+                List<ProcessHnd> tempList = new List<ProcessHnd>();
+                
+                WinAPI.EnumDelegate filter = delegate (IntPtr hWnd, int lParam)
+                {
+                    StringBuilder strbTitle = new StringBuilder(255);
+                    int nLength = WinAPI.GetWindowText(hWnd, strbTitle, strbTitle.Capacity + 1);
+                    string strTitle = strbTitle.ToString();
+
+                    if (WinAPI.IsWindowVisible(hWnd) && string.IsNullOrEmpty(strTitle) == false)
+                    {
+                        // get window topmost info
+                        bool isTM = WinAPI.isWindowTopMost(hWnd);
+
+                        // Get window opacity
+                        bool canSetOpacity = true;
+                        byte transparency = GetWindowTransparency(hWnd, out canSetOpacity);
+
+                        // get process information
+                        IntPtr hProc = WinAPI.GetProcessHandleFromHwnd(hWnd);
+                        int pid = WinAPI.GetProcessId(hProc);
+                        Process process = Process.GetProcessById(pid);
+                        string processPath = "";
+                        string description = "";
+                        string processFileName = "";
+                        try
+                        {
+                            ProcessModule pModule = process.MainModule;
+                            processPath = pModule.FileName;
+                            description = pModule.FileVersionInfo.FileDescription;
+                            processFileName = process.MainModule.ModuleName;
+                        }
+                        catch (Exception e)
+                        {
+                            // MessageBox.Show(e.ToString());
+                        }
+
+                        Bitmap bitmapUWP = null;
+                        // 如果是UWP程序，获取UWP程序的图标
+                        if (IsWindows10)
+                        {
+                            UWPProcess.AppxPackage appxPackage = UWPProcess.AppxPackage.FromProcess(process);
+                            if (appxPackage != null)
+                            {
+                                string logoPath = appxPackage.FindHighestScaleQualifiedImagePath(appxPackage.Logo);
+                                if (logoPath != null)
+                                {
+                                    bitmapUWP = new Bitmap(logoPath);
+                                    Bitmap bitmapBackground = new Bitmap(bitmapUWP.Width, bitmapUWP.Height);
+
+                                    int TotalPixels = 0;
+                                    int WhitePixels = 0;
+                                    for (int i = 0; i < bitmapUWP.Height; i++)
+                                    {
+                                        for (int j = 0; j < bitmapUWP.Height; j++)
+                                        {
+                                            Color color = bitmapUWP.GetPixel(i, j);
+                                            if (color == null || color.A != 255)
+                                            {
+                                                continue;
+                                            }
+                                            TotalPixels++;
+                                            if (color.R == 255 && color.G == 255 && color.B == 255)
+                                            {
+                                                WhitePixels++;
+                                            }
+                                        }
+                                    }
+                                    if (TotalPixels != 0 && WhitePixels * 100 / TotalPixels >= 80)
+                                    {
+                                        for (int i = 0; i < bitmapUWP.Width; i++)
+                                            for (int j = 0; j < bitmapUWP.Height; j++)
+                                                bitmapBackground.SetPixel(i, j, Color.FromArgb(255, 128, 128));
+                                    }
+                                    using (Graphics gr = Graphics.FromImage(bitmapBackground))
+                                    {
+                                        gr.DrawImage(bitmapUWP, new PointF(0, 0));
+                                    }
+                                    bitmapUWP = bitmapBackground;
+                                }
+                            }
+                        }
+
+                        // Get icon
+                        IntPtr hIcon = WinAPI.GetAppIcon(hWnd);
+                        Bitmap bitmap = null;
+
+                        if (hIcon != IntPtr.Zero)
+                        {
+                            bitmap = Icon.FromHandle(hIcon).ToBitmap();
+                        }
+                        else
+                        {
+                            bitmap = Icon.FromHandle(WinAPI.LoadIcon(IntPtr.Zero, (IntPtr)WinAPI.SystemIcons.IDI_APPLICATION)).ToBitmap();
+                        }
+                        // try get application icon
+                        if (hIcon == IntPtr.Zero)
+                        {
+                            hIcon = extractIconFromFile(processPath);
+                            if (hIcon != IntPtr.Zero)
+                                bitmap = Icon.FromHandle(hIcon).ToBitmap();
+                        }
+
+                        tempList.Add(new ProcessHnd()
+                        {
+                            WindowName = strTitle,
+                            Handle = hWnd,
+                            Icon = bitmapUWP == null ? bitmap : bitmapUWP,
+                            IsTopMost = isTM,
+                            ProcessHandler = hProc,
+                            ProcessFullPath = processPath,
+                            Description = description,
+                            WindowOpacity = transparency,
+                            CanSetWindowOpacity = canSetOpacity,
+                            ProcessObject = process,
+                            ProcessID = pid,
+                            ProcessFileName = processFileName
+                        });
+                    }
+                    return true;
+                };
+
+                WinAPI.EnumDesktopWindows(IntPtr.Zero, filter, IntPtr.Zero);
+                return tempList;
+            });
+
+            // 更新UI必须在主线程
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action(() =>
+                {
+                    WindowList.Clear();
+                    WindowList.AddRange(newWindowList);
+                    lstWindow.Items.Clear();
+                    foreach (ProcessHnd H in WindowList)
+                    {
+                        lstWindow.Items.Add(H);
+                    }
+                    btnRefresh.Enabled = true;
+                    btnCancelTopmost.Enabled = btnTopMost.Enabled = false;
+                }));
+            }
+            else
+            {
+                WindowList.Clear();
+                WindowList.AddRange(newWindowList);
+                lstWindow.Items.Clear();
+                foreach (ProcessHnd H in WindowList)
+                {
+                    lstWindow.Items.Add(H);
+                }
+                btnRefresh.Enabled = true;
+                btnCancelTopmost.Enabled = btnTopMost.Enabled = false;
+            }
+        }
+
         private void btnRefresh_Click(object sender, EventArgs e)
         {
-            UpdateProcessList();
-            btnCancelTopmost.Enabled = btnTopMost.Enabled = false;
+            UpdateProcessListAsync();
         }
 
         private void btnGetHandle_Click(object sender, EventArgs e)
@@ -196,7 +362,7 @@ namespace WindowTopMost
 
         private void frmMain_Load(object sender, EventArgs e)
         {
-            UpdateProcessList();
+            UpdateProcessListAsync();
 
             this.DpiChanged += FrmMain_DpiChanged;
             ScaleControlSizeAndLocation(this, DpiInfo.scale);
