@@ -1,14 +1,23 @@
-﻿using System.Configuration;
-using System.Data;
 using System.Windows;
+using MelinaWindowTopmost.Services;
+using MelinaWindowTopmost.ViewModels;
 
-namespace MelinaWindowTopmost
+namespace MelinaWindowTopmost;
+
+public partial class App : System.Windows.Application
 {
-    /// <summary>
-    /// Interaction logic for App.xaml
-    /// </summary>
-    public partial class App : Application
+    protected override void OnStartup(StartupEventArgs e)
     {
-    }
+        base.OnStartup(e);
 
+        IconCacheService iconCache = new();
+        LocalizationService localization = new();
+        SettingsService settings = new();
+        WindowEnumerationService enumeration = new(iconCache);
+        WindowControlService control = new();
+        MainWindowViewModel viewModel = new(enumeration, control, settings, iconCache, localization);
+
+        MainWindow window = new(viewModel);
+        window.Show();
+    }
 }
