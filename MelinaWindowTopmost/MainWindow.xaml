@@ -7,6 +7,7 @@
                  xmlns:vm="clr-namespace:MelinaWindowTopmost.ViewModels"
                  mc:Ignorable="d"
                  Title="{Binding Path=Localization[AppName]}"
+                 Icon="Assets/maki5.ico"
                  Width="608"
                  Height="680"
                  MinWidth="560"

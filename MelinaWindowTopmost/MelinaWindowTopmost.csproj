@@ -7,7 +7,15 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationIcon>Assets\maki5.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Assets\maki5.ico" />
+    <None Remove="Assets\WindowTopMostIcon.ico" />
+    <Resource Include="Assets\maki5.ico" />
+    <Resource Include="Assets\WindowTopMostIcon.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
