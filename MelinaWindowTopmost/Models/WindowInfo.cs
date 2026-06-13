@@ -12,6 +12,8 @@ public sealed class WindowInfo
 
     public string ProcessName { get; init; } = string.Empty;
 
+    public string ProcessFileName { get; init; } = string.Empty;
+
     public string ProcessPath { get; init; } = string.Empty;
 
     public string Description { get; init; } = string.Empty;

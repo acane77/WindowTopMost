@@ -4,8 +4,9 @@
         Title="{Binding Title}"
         Icon="Assets/maki5.ico"
         Width="520"
-        Height="360"
+        Height="460"
         WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
         ResizeMode="NoResize"
         FontFamily="Microsoft YaHei"
         Background="{DynamicResource ApplicationBackgroundBrush}">

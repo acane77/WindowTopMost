@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 using MelinaWindowTopmost.Models;
 using MelinaWindowTopmost.Native;
@@ -59,6 +60,7 @@ public sealed class WindowEnumerationService
         NativeMethods.GetWindowThreadProcessId(hWnd, out int processId);
         string processName = string.Empty;
         string processPath = TryGetProcessPath(processId);
+        string processFileName = string.Empty;
         string description = string.Empty;
         Process? process = null;
 
@@ -66,6 +68,7 @@ public sealed class WindowEnumerationService
         {
             process = Process.GetProcessById(processId);
             processName = process.ProcessName;
+            processFileName = string.IsNullOrWhiteSpace(processPath) ? string.Empty : Path.GetFileName(processPath);
             if (!string.IsNullOrWhiteSpace(processPath))
             {
                 FileVersionInfo versionInfo = FileVersionInfo.GetVersionInfo(processPath);
@@ -97,6 +100,7 @@ public sealed class WindowEnumerationService
             Title = title,
             ProcessId = processId,
             ProcessName = processName,
+            ProcessFileName = processFileName,
             ProcessPath = processPath,
             Description = description,
             IsTopMost = isTopMost,

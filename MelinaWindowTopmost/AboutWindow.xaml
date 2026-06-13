@@ -6,6 +6,7 @@
         Width="640"
         Height="620"
         WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
         ResizeMode="NoResize"
         FontFamily="Microsoft YaHei"
         Background="{DynamicResource ApplicationBackgroundBrush}">

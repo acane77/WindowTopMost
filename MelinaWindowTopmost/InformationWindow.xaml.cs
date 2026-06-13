@@ -26,7 +26,7 @@ public partial class InformationWindow : Window
             Subtitle = window.Subtitle;
             Handle = window.HandleText;
             WindowTitle = window.Title;
-            Process = string.IsNullOrWhiteSpace(window.ProcessName) ? localization["NoProcessPath"] : window.ProcessName;
+            Process = string.IsNullOrWhiteSpace(window.ProcessFileName) ? localization["NoProcessPath"] : window.ProcessFileName;
             Path = window.ProcessPath;
             HandleLabel = localization["Handle"];
             TitleLabel = localization["Title"];

@@ -23,6 +23,8 @@ public sealed partial class WindowItemViewModel : ObservableObject
 
     public string ProcessName => Info.ProcessName;
 
+    public string ProcessFileName => Info.ProcessFileName;
+
     public string ProcessPath => Info.ProcessPath;
 
     public int ProcessId => Info.ProcessId;
@@ -43,6 +45,7 @@ public sealed partial class WindowItemViewModel : ObservableObject
         OnPropertyChanged(nameof(Title));
         OnPropertyChanged(nameof(Subtitle));
         OnPropertyChanged(nameof(ProcessName));
+        OnPropertyChanged(nameof(ProcessFileName));
         OnPropertyChanged(nameof(ProcessPath));
         OnPropertyChanged(nameof(ProcessId));
         OnPropertyChanged(nameof(IsTopMost));

@@ -7,6 +7,7 @@
         Width="520"
         Height="460"
         WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
         ResizeMode="NoResize"
         FontFamily="Microsoft YaHei"
         Background="{DynamicResource ApplicationBackgroundBrush}">
@@ -52,21 +53,26 @@
                       IsChecked="{Binding Settings.AutoRefresh}"
                       Margin="0,0,0,14" />
 
-            <DockPanel Margin="0,0,0,22">
+            <Grid Margin="0,0,0,22">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
                 <TextBlock Text="{Binding Path=Localization[Interval]}"
                            VerticalAlignment="Center"
                            FontWeight="SemiBold" />
-                <TextBlock Text="{Binding Path=Localization[Seconds]}"
-                           DockPanel.Dock="Right"
-                           Margin="8,0,0,0"
-                           VerticalAlignment="Center" />
-                <ui:NumberBox Width="96"
-                              DockPanel.Dock="Right"
+                <ui:NumberBox Grid.Column="1"
+                              Width="236"
+                              Margin="16,0,4,0"
                               Minimum="0.5"
                               Maximum="10"
                               SmallChange="0.5"
                               Value="{Binding Settings.RefreshIntervalSeconds}" />
-            </DockPanel>
+                <TextBlock Text="{Binding Path=Localization[Seconds]}"
+                           Grid.Column="2"
+                           VerticalAlignment="Center" />
+            </Grid>
 
             <Button Content="{Binding Path=Localization[ClearIconCache]}"
                     HorizontalAlignment="Left"
