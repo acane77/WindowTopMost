@@ -25,6 +25,12 @@ internal static class NativeMethods
     public const int GclpHIcon = -14;
     public const int GclpHIconSmall = -34;
 
+    private const uint ShgfiIcon = 0x000000100;
+    private const uint ShgfiLargeIcon = 0x000000000;
+    private const uint ShgfiUseFileAttributes = 0x000000010;
+    private const uint FileAttributeNormal = 0x00000080;
+    private const int IdiApplication = 32512;
+
     public const uint ProcessQueryLimitedInformation = 0x1000;
 
     public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
@@ -101,6 +107,12 @@ internal static class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool DestroyIcon(IntPtr icon);
 
+    [DllImport("user32.dll", CharSet = CharSet.Auto)]
+    private static extern IntPtr LoadIcon(IntPtr instance, IntPtr iconName);
+
+    [DllImport("shell32.dll", CharSet = CharSet.Auto)]
+    private static extern IntPtr SHGetFileInfo(string path, uint fileAttributes, ref SHFILEINFO fileInfo, uint fileInfoSize, uint flags);
+
     [DllImport("kernel32.dll", SetLastError = true)]
     public static extern IntPtr OpenProcess(uint desiredAccess, bool inheritHandle, int processId);
 
@@ -136,5 +148,41 @@ internal static class NativeMethods
         }
 
         return icon;
+    }
+
+    public static IntPtr GetModernApplicationIcon()
+    {
+        try
+        {
+            SHFILEINFO shfi = new();
+            IntPtr result = SHGetFileInfo(
+                ".exe",
+                FileAttributeNormal,
+                ref shfi,
+                (uint)Marshal.SizeOf(typeof(SHFILEINFO)),
+                ShgfiIcon | ShgfiLargeIcon | ShgfiUseFileAttributes);
+
+            if (result != IntPtr.Zero && shfi.hIcon != IntPtr.Zero)
+            {
+                return shfi.hIcon;
+            }
+        }
+        catch
+        {
+        }
+
+        return LoadIcon(IntPtr.Zero, new IntPtr(IdiApplication));
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+    private struct SHFILEINFO
+    {
+        public IntPtr hIcon;
+        public int iIcon;
+        public uint dwAttributes;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
+        public string szDisplayName;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 80)]
+        public string szTypeName;
     }
 }

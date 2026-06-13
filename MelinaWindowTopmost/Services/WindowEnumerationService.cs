@@ -60,10 +60,11 @@ public sealed class WindowEnumerationService
         string processName = string.Empty;
         string processPath = TryGetProcessPath(processId);
         string description = string.Empty;
+        Process? process = null;
 
         try
         {
-            using Process process = Process.GetProcessById(processId);
+            process = Process.GetProcessById(processId);
             processName = process.ProcessName;
             if (!string.IsNullOrWhiteSpace(processPath))
             {
@@ -90,7 +91,7 @@ public sealed class WindowEnumerationService
             }
         }
 
-        return new WindowInfo
+        WindowInfo info = new()
         {
             Handle = hWnd,
             Title = title,
@@ -101,8 +102,11 @@ public sealed class WindowEnumerationService
             IsTopMost = isTopMost,
             OpacityAlpha = alpha,
             HasLayeredOpacity = hasLayeredOpacity,
-            Icon = _iconCache.GetIcon(hWnd, processId, processPath)
+            Icon = _iconCache.GetIcon(hWnd, process, processId, processPath)
         };
+
+        process?.Dispose();
+        return info;
     }
 
     private static string GetWindowTitle(IntPtr hWnd)
