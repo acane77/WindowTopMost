@@ -14,8 +14,14 @@ namespace MelinaWindowTopmost.Services;
 
 public sealed class IconCacheService
 {
+    private const int IconFingerprintSize = 32;
+    private const int IconChannelTolerance = 10;
+    private const double IconSimilarityThreshold = 0.95;
+
     private readonly ConcurrentDictionary<string, ImageSource> _cache = new();
     private readonly bool _isWindows10OrNewer;
+    private static readonly Lazy<int[]?> ModernApplicationIconFingerprint = new(CreateModernApplicationIconFingerprint);
+    private static readonly Lazy<int[]?> LegacyApplicationIconFingerprint = new(CreateLegacyApplicationIconFingerprint);
 
     public IconCacheService()
     {
@@ -31,9 +37,9 @@ public sealed class IconCacheService
 
     public void Clear() => _cache.Clear();
 
-    public ImageSource? GetIcon(IntPtr hWnd, Process? process, int processId, string processPath)
+    public ImageSource? GetIcon(IntPtr hWnd, Process? process, string processPath)
     {
-        string key = CreateKey(processId, processPath);
+        string key = CreateKey(hWnd);
         if (_cache.TryGetValue(key, out ImageSource? cached))
         {
             return cached;
@@ -50,16 +56,7 @@ public sealed class IconCacheService
         return source;
     }
 
-    private static string CreateKey(int processId, string processPath)
-    {
-        if (!string.IsNullOrWhiteSpace(processPath) && File.Exists(processPath))
-        {
-            DateTime lastWrite = File.GetLastWriteTimeUtc(processPath);
-            return $"{processPath}|{lastWrite.Ticks}";
-        }
-
-        return $"pid:{processId}";
-    }
+    private static string CreateKey(IntPtr hWnd) => $"hwnd:{hWnd.ToInt64():X}";
 
     private Bitmap? GetIconBitmap(IntPtr hWnd, Process? process, string processPath)
     {
@@ -69,37 +66,75 @@ public sealed class IconCacheService
             bitmapUWP = TryGetUwpIcon(process);
         }
 
-        IntPtr hIcon = NativeMethods.GetAppIcon(hWnd);
-        Bitmap? bitmap = null;
+        if (bitmapUWP is not null)
+        {
+            return bitmapUWP;
+        }
 
+        Bitmap? windowBitmap = GetWindowIconBitmap(hWnd);
+        if (windowBitmap is not null && !IsDefaultApplicationIcon(windowBitmap))
+        {
+            return windowBitmap;
+        }
+
+        Bitmap? fileBitmap = GetFileIconBitmap(processPath);
+        if (fileBitmap is not null)
+        {
+            windowBitmap?.Dispose();
+            return fileBitmap;
+        }
+
+        if (windowBitmap is not null)
+        {
+            return windowBitmap;
+        }
+
+        return GetDefaultIconBitmap();
+    }
+
+    private static Bitmap? GetWindowIconBitmap(IntPtr hWnd)
+    {
+        IntPtr hIcon = NativeMethods.GetAppIcon(hWnd);
+        return hIcon == IntPtr.Zero ? null : CreateBitmapFromIconHandle(hIcon, destroyIcon: false);
+    }
+
+    private static Bitmap? GetFileIconBitmap(string processPath)
+    {
+        if (string.IsNullOrWhiteSpace(processPath) || !File.Exists(processPath))
+        {
+            return null;
+        }
+
+        IntPtr hIcon = NativeMethods.GetFileIcon(processPath);
         if (hIcon != IntPtr.Zero)
         {
-            using Icon icon = Icon.FromHandle(hIcon);
-            bitmap = icon.ToBitmap();
-        }
-        else
-        {
-            IntPtr sysIcon = NativeMethods.GetModernApplicationIcon();
-            if (sysIcon != IntPtr.Zero)
-            {
-                using Icon icon = Icon.FromHandle(sysIcon);
-                bitmap = icon.ToBitmap();
-                NativeMethods.DestroyIcon(sysIcon);
-            }
+            return CreateBitmapFromIconHandle(hIcon, destroyIcon: true);
         }
 
-        if (bitmap == null && hIcon == IntPtr.Zero)
+        hIcon = ExtractIconFromFile(processPath);
+        return hIcon == IntPtr.Zero ? null : CreateBitmapFromIconHandle(hIcon, destroyIcon: true);
+    }
+
+    private static Bitmap? GetDefaultIconBitmap()
+    {
+        IntPtr hIcon = NativeMethods.GetModernApplicationIcon();
+        return hIcon == IntPtr.Zero ? null : CreateBitmapFromIconHandle(hIcon, destroyIcon: true);
+    }
+
+    private static Bitmap CreateBitmapFromIconHandle(IntPtr hIcon, bool destroyIcon)
+    {
+        try
         {
-            hIcon = ExtractIconFromFile(processPath);
-            if (hIcon != IntPtr.Zero)
+            using Icon icon = Icon.FromHandle(hIcon);
+            return icon.ToBitmap();
+        }
+        finally
+        {
+            if (destroyIcon)
             {
-                using Icon icon = Icon.FromHandle(hIcon);
-                bitmap = icon.ToBitmap();
                 NativeMethods.DestroyIcon(hIcon);
             }
         }
-
-        return bitmapUWP ?? bitmap;
     }
 
     private static Bitmap? TryGetUwpIcon(Process process)
@@ -235,6 +270,71 @@ public sealed class IconCacheService
         }
 
         bitmap.UnlockBits(data);
+    }
+
+    private static bool IsDefaultApplicationIcon(Bitmap bitmap)
+    {
+        int[] fingerprint = CreateIconFingerprint(bitmap);
+        return IsSimilarFingerprint(fingerprint, ModernApplicationIconFingerprint.Value) ||
+               IsSimilarFingerprint(fingerprint, LegacyApplicationIconFingerprint.Value);
+    }
+
+    private static int[]? CreateModernApplicationIconFingerprint()
+    {
+        using Bitmap? bitmap = GetDefaultIconBitmap();
+        return bitmap is null ? null : CreateIconFingerprint(bitmap);
+    }
+
+    private static int[] CreateLegacyApplicationIconFingerprint()
+    {
+        using Bitmap bitmap = SystemIcons.Application.ToBitmap();
+        return CreateIconFingerprint(bitmap);
+    }
+
+    private static int[] CreateIconFingerprint(Bitmap bitmap)
+    {
+        using Bitmap normalized = new(IconFingerprintSize, IconFingerprintSize, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+        using (Graphics graphics = Graphics.FromImage(normalized))
+        {
+            graphics.Clear(System.Drawing.Color.Transparent);
+            graphics.DrawImage(bitmap, new Rectangle(0, 0, IconFingerprintSize, IconFingerprintSize));
+        }
+
+        int[] pixels = new int[IconFingerprintSize * IconFingerprintSize];
+        for (int y = 0; y < IconFingerprintSize; y++)
+        {
+            for (int x = 0; x < IconFingerprintSize; x++)
+            {
+                pixels[(y * IconFingerprintSize) + x] = normalized.GetPixel(x, y).ToArgb();
+            }
+        }
+
+        return pixels;
+    }
+
+    private static bool IsSimilarFingerprint(int[] source, int[]? target)
+    {
+        if (target is null || source.Length != target.Length)
+        {
+            return false;
+        }
+
+        int similarPixels = 0;
+        for (int i = 0; i < source.Length; i++)
+        {
+            System.Drawing.Color sourceColor = System.Drawing.Color.FromArgb(source[i]);
+            System.Drawing.Color targetColor = System.Drawing.Color.FromArgb(target[i]);
+
+            if (Math.Abs(sourceColor.A - targetColor.A) <= IconChannelTolerance &&
+                Math.Abs(sourceColor.R - targetColor.R) <= IconChannelTolerance &&
+                Math.Abs(sourceColor.G - targetColor.G) <= IconChannelTolerance &&
+                Math.Abs(sourceColor.B - targetColor.B) <= IconChannelTolerance)
+            {
+                similarPixels++;
+            }
+        }
+
+        return similarPixels / (double)source.Length >= IconSimilarityThreshold;
     }
 
     private static ImageSource CreateBitmapSource(Bitmap bitmap)

@@ -106,7 +106,7 @@ public sealed class WindowEnumerationService
             IsTopMost = isTopMost,
             OpacityAlpha = alpha,
             HasLayeredOpacity = hasLayeredOpacity,
-            Icon = _iconCache.GetIcon(hWnd, process, processId, processPath)
+            Icon = _iconCache.GetIcon(hWnd, process, processPath)
         };
 
         process?.Dispose();

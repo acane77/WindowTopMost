@@ -110,6 +110,9 @@ internal static class NativeMethods
     [DllImport("user32.dll", CharSet = CharSet.Auto)]
     private static extern IntPtr LoadIcon(IntPtr instance, IntPtr iconName);
 
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern IntPtr CopyIcon(IntPtr icon);
+
     [DllImport("shell32.dll", CharSet = CharSet.Auto)]
     private static extern IntPtr SHGetFileInfo(string path, uint fileAttributes, ref SHFILEINFO fileInfo, uint fileInfoSize, uint flags);
 
@@ -171,7 +174,37 @@ internal static class NativeMethods
         {
         }
 
-        return LoadIcon(IntPtr.Zero, new IntPtr(IdiApplication));
+        IntPtr sharedIcon = LoadIcon(IntPtr.Zero, new IntPtr(IdiApplication));
+        return sharedIcon == IntPtr.Zero ? IntPtr.Zero : CopyIcon(sharedIcon);
+    }
+
+    public static IntPtr GetFileIcon(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return IntPtr.Zero;
+        }
+
+        try
+        {
+            SHFILEINFO shfi = new();
+            IntPtr result = SHGetFileInfo(
+                path,
+                0,
+                ref shfi,
+                (uint)Marshal.SizeOf(typeof(SHFILEINFO)),
+                ShgfiIcon | ShgfiLargeIcon);
+
+            if (result != IntPtr.Zero && shfi.hIcon != IntPtr.Zero)
+            {
+                return shfi.hIcon;
+            }
+        }
+        catch
+        {
+        }
+
+        return IntPtr.Zero;
     }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
