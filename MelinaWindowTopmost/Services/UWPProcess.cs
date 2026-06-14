@@ -120,26 +120,62 @@ namespace MelinaWindowTopmost.Services
                 if (resourceName == null)
                     throw new ArgumentNullException("resourceName");
 
-                const string scaleToken = ".scale-";
-                var sizes = new List<int>();
-                string name = System.IO.Path.GetFileNameWithoutExtension(resourceName);
-                string ext = System.IO.Path.GetExtension(resourceName);
-                foreach (var file in Directory.EnumerateFiles(System.IO.Path.Combine(Path, System.IO.Path.GetDirectoryName(resourceName)), name + scaleToken + "*" + ext))
-                {
-                    string fileName = System.IO.Path.GetFileNameWithoutExtension(file);
-                    int pos = fileName.IndexOf(scaleToken) + scaleToken.Length;
-                    string sizeText = fileName.Substring(pos);
-                    int size;
-                    if (int.TryParse(sizeText, out size))
-                    {
-                        sizes.Add(size);
-                    }
-                }
-                if (sizes.Count == 0)
+                string relativeName = resourceName.Replace('/', System.IO.Path.DirectorySeparatorChar);
+                string? directoryName = System.IO.Path.GetDirectoryName(relativeName);
+                string directoryPath = string.IsNullOrWhiteSpace(directoryName)
+                    ? Path
+                    : System.IO.Path.Combine(Path, directoryName);
+
+                if (!Directory.Exists(directoryPath))
                     return null;
 
-                sizes.Sort();
-                return System.IO.Path.Combine(Path, System.IO.Path.GetDirectoryName(resourceName), name + scaleToken + sizes.Last() + ext);
+                string name = System.IO.Path.GetFileNameWithoutExtension(relativeName);
+                string ext = System.IO.Path.GetExtension(relativeName);
+                string exactPath = System.IO.Path.Combine(directoryPath, name + ext);
+
+                return Directory.EnumerateFiles(directoryPath, name + "*" + ext)
+                    .Select(file => new
+                    {
+                        Path = file,
+                        Score = GetQualifiedImageScore(file, exactPath, name)
+                    })
+                    .Where(candidate => candidate.Score >= 0)
+                    .OrderByDescending(candidate => candidate.Score)
+                    .Select(candidate => candidate.Path)
+                    .FirstOrDefault();
+            }
+
+            private static int GetQualifiedImageScore(string filePath, string exactPath, string resourceNameWithoutExtension)
+            {
+                if (string.Equals(filePath, exactPath, StringComparison.OrdinalIgnoreCase))
+                    return 1;
+
+                string fileName = System.IO.Path.GetFileNameWithoutExtension(filePath);
+                if (!fileName.StartsWith(resourceNameWithoutExtension, StringComparison.OrdinalIgnoreCase))
+                    return -1;
+
+                int targetSize = GetQualifierNumber(fileName, ".targetsize-");
+                if (targetSize > 0)
+                    return 10000 + targetSize;
+
+                int scale = GetQualifierNumber(fileName, ".scale-");
+                return scale > 0 ? 1000 + scale : -1;
+            }
+
+            private static int GetQualifierNumber(string fileName, string qualifier)
+            {
+                int qualifierIndex = fileName.IndexOf(qualifier, StringComparison.OrdinalIgnoreCase);
+                if (qualifierIndex < 0)
+                    return 0;
+
+                int start = qualifierIndex + qualifier.Length;
+                int end = start;
+                while (end < fileName.Length && char.IsDigit(fileName[end]))
+                {
+                    end++;
+                }
+
+                return int.TryParse(fileName.Substring(start, end - start), out int value) ? value : 0;
             }
 
             public override string ToString()

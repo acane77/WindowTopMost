@@ -17,6 +17,7 @@ public sealed class IconCacheService
     private const int IconFingerprintSize = 32;
     private const int IconChannelTolerance = 10;
     private const double IconSimilarityThreshold = 0.95;
+    private const int UwpIconPaddingPercent = 10;
 
     private readonly ConcurrentDictionary<string, ImageSource> _cache = new();
     private readonly bool _isWindows10OrNewer;
@@ -60,21 +61,30 @@ public sealed class IconCacheService
 
     private Bitmap? GetIconBitmap(IntPtr hWnd, Process? process, string processPath)
     {
-        Bitmap? bitmapUWP = null;
-        if (_isWindows10OrNewer && process is not null)
+        bool isApplicationFrameHost = IsApplicationFrameHost(process, processPath);
+        if (_isWindows10OrNewer && isApplicationFrameHost)
         {
-            bitmapUWP = TryGetUwpIcon(process);
-        }
-
-        if (bitmapUWP is not null)
-        {
-            return bitmapUWP;
+            Bitmap? bitmapUWP = TryGetUwpIcon(hWnd, process);
+            if (bitmapUWP is not null)
+            {
+                return bitmapUWP;
+            }
         }
 
         Bitmap? windowBitmap = GetWindowIconBitmap(hWnd);
         if (windowBitmap is not null && !IsDefaultApplicationIcon(windowBitmap))
         {
             return windowBitmap;
+        }
+
+        if (_isWindows10OrNewer && !isApplicationFrameHost)
+        {
+            Bitmap? bitmapUWP = TryGetUwpIcon(hWnd, process);
+            if (bitmapUWP is not null)
+            {
+                windowBitmap?.Dispose();
+                return bitmapUWP;
+            }
         }
 
         Bitmap? fileBitmap = GetFileIconBitmap(processPath);
@@ -90,6 +100,26 @@ public sealed class IconCacheService
         }
 
         return GetDefaultIconBitmap();
+    }
+
+    private static bool IsApplicationFrameHost(Process? process, string processPath)
+    {
+        string? processName = null;
+        try
+        {
+            processName = process?.ProcessName;
+        }
+        catch
+        {
+        }
+
+        if (string.Equals(processName, "ApplicationFrameHost", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        string fileName = Path.GetFileNameWithoutExtension(processPath);
+        return string.Equals(fileName, "ApplicationFrameHost", StringComparison.OrdinalIgnoreCase);
     }
 
     private static Bitmap? GetWindowIconBitmap(IntPtr hWnd)
@@ -137,42 +167,225 @@ public sealed class IconCacheService
         }
     }
 
+    private static Bitmap? TryGetUwpIcon(IntPtr hWnd, Process? fallbackProcess)
+    {
+        Bitmap? bitmap = TryGetUwpIconFromWindowProcess(hWnd);
+        bitmap ??= TryGetUwpIconFromChildWindowProcesses(hWnd);
+
+        if (bitmap is not null || fallbackProcess is null)
+        {
+            return bitmap;
+        }
+
+        return TryGetUwpIcon(fallbackProcess);
+    }
+
+    private static Bitmap? TryGetUwpIconFromWindowProcess(IntPtr hWnd)
+    {
+        IntPtr hProcess = NativeMethods.GetProcessHandleFromHwnd(hWnd);
+        if (hProcess == IntPtr.Zero)
+        {
+            return null;
+        }
+
+        try
+        {
+            int processId = NativeMethods.GetProcessId(hProcess);
+            if (processId <= 0)
+            {
+                return null;
+            }
+
+            return TryGetUwpIcon(processId);
+        }
+        catch
+        {
+            return null;
+        }
+        finally
+        {
+            NativeMethods.CloseHandle(hProcess);
+        }
+    }
+
+    private static Bitmap? TryGetUwpIconFromChildWindowProcesses(IntPtr hWnd)
+    {
+        HashSet<int> processIds = [];
+
+        NativeMethods.EnumChildWindows(hWnd, (childHWnd, _) =>
+        {
+            NativeMethods.GetWindowThreadProcessId(childHWnd, out int processId);
+            if (processId > 0)
+            {
+                processIds.Add(processId);
+            }
+
+            return true;
+        }, IntPtr.Zero);
+
+        foreach (int processId in processIds)
+        {
+            Bitmap? bitmap = TryGetUwpIcon(processId);
+            if (bitmap is not null)
+            {
+                return bitmap;
+            }
+        }
+
+        return null;
+    }
+
     private static Bitmap? TryGetUwpIcon(Process process)
     {
         try
         {
-            UWPProcess.AppxPackage appxPackage = UWPProcess.AppxPackage.FromProcess(process);
+            return TryGetUwpIcon(process.Id);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static Bitmap? TryGetUwpIcon(int processId)
+    {
+        try
+        {
+            UWPProcess.AppxPackage appxPackage = UWPProcess.AppxPackage.FromProcess(processId);
             if (appxPackage is null)
             {
                 return null;
             }
 
-            string logoPath = appxPackage.FindHighestScaleQualifiedImagePath(appxPackage.Logo);
+            UWPProcess.AppxApp? app = GetAppForPackage(appxPackage);
+            string? logoPath = GetAppxLogoPath(appxPackage, app);
             if (logoPath is null)
             {
                 return null;
             }
 
-            Bitmap originalBitmap = new(logoPath);
+            using Bitmap originalBitmap = new(logoPath);
             Bitmap bitmapBackground = new(originalBitmap.Width, originalBitmap.Height);
 
             if (IsMostlyWhite(originalBitmap, 80))
             {
-                FillBackgroundColor(bitmapBackground, System.Drawing.Color.FromArgb(255, 128, 128));
+                FillBackgroundColor(bitmapBackground, GetAppxBackgroundColor(app) ?? System.Drawing.Color.FromArgb(255, 128, 128));
             }
 
             using (Graphics gr = Graphics.FromImage(bitmapBackground))
             {
-                gr.DrawImage(originalBitmap, new PointF(0, 0));
+                gr.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                gr.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+                gr.DrawImage(originalBitmap, GetCenteredPaddedRectangle(originalBitmap.Size));
             }
 
-            originalBitmap.Dispose();
             return bitmapBackground;
         }
         catch
         {
             return null;
         }
+    }
+
+    private static UWPProcess.AppxApp? GetAppForPackage(UWPProcess.AppxPackage appxPackage)
+    {
+        string? appId = GetAppId(appxPackage.ApplicationUserModelId);
+        if (!string.IsNullOrWhiteSpace(appId))
+        {
+            UWPProcess.AppxApp? app = appxPackage.Apps.FirstOrDefault(candidate =>
+                string.Equals(candidate.Id, appId, StringComparison.OrdinalIgnoreCase));
+            if (app is not null)
+            {
+                return app;
+            }
+        }
+
+        return appxPackage.Apps.FirstOrDefault();
+    }
+
+    private static string? GetAppId(string? applicationUserModelId)
+    {
+        if (string.IsNullOrWhiteSpace(applicationUserModelId))
+        {
+            return null;
+        }
+
+        int separatorIndex = applicationUserModelId.LastIndexOf('!');
+        return separatorIndex >= 0 && separatorIndex < applicationUserModelId.Length - 1
+            ? applicationUserModelId[(separatorIndex + 1)..]
+            : null;
+    }
+
+    private static string? GetAppxLogoPath(UWPProcess.AppxPackage appxPackage, UWPProcess.AppxApp? app)
+    {
+        foreach (string? resourceName in GetAppxLogoResourceNames(appxPackage, app))
+        {
+            if (string.IsNullOrWhiteSpace(resourceName))
+            {
+                continue;
+            }
+
+            string? logoPath = appxPackage.FindHighestScaleQualifiedImagePath(resourceName);
+            if (!string.IsNullOrWhiteSpace(logoPath) && File.Exists(logoPath))
+            {
+                return logoPath;
+            }
+        }
+
+        return null;
+    }
+
+    private static IEnumerable<string?> GetAppxLogoResourceNames(UWPProcess.AppxPackage appxPackage, UWPProcess.AppxApp? app)
+    {
+        if (app is not null)
+        {
+            yield return app.GetStringValue("Square44x44Logo");
+            yield return app.SmallLogo;
+            yield return app.Square30x30Logo;
+            yield return app.Logo;
+            yield return app.Square150x150Logo;
+            yield return app.GetStringValue("Square71x71Logo");
+            yield return app.Square70x70Logo;
+            yield return app.Square310x310Logo;
+        }
+
+        yield return appxPackage.Logo;
+    }
+
+    private static System.Drawing.Color? GetAppxBackgroundColor(UWPProcess.AppxApp? app)
+    {
+        if (app is null || string.IsNullOrWhiteSpace(app.BackgroundColor))
+        {
+            return null;
+        }
+
+        if (string.Equals(app.BackgroundColor, "transparent", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        try
+        {
+            return System.Drawing.ColorTranslator.FromHtml(app.BackgroundColor);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static Rectangle GetCenteredPaddedRectangle(System.Drawing.Size size)
+    {
+        int padding = Math.Max(1, Math.Min(size.Width, size.Height) * UwpIconPaddingPercent / 100);
+        int availableWidth = Math.Max(1, size.Width - (padding * 2));
+        int availableHeight = Math.Max(1, size.Height - (padding * 2));
+        double scale = Math.Min(availableWidth / (double)size.Width, availableHeight / (double)size.Height);
+        int width = Math.Max(1, (int)Math.Round(size.Width * scale));
+        int height = Math.Max(1, (int)Math.Round(size.Height * scale));
+        int x = (size.Width - width) / 2;
+        int y = (size.Height - height) / 2;
+
+        return new Rectangle(x, y, width, height);
     }
 
     private static IntPtr ExtractIconFromFile(string processPath)
