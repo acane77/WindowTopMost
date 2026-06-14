@@ -5,7 +5,7 @@
         Title="{Binding Path=Localization[Settings]}"
         Icon="Assets/maki5.ico"
         Width="520"
-        Height="460"
+        Height="510"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
         ResizeMode="NoResize"
@@ -45,9 +45,15 @@
                 <ComboBoxItem Content="{Binding Path=Localization[Dark]}" Tag="Dark" />
             </ComboBox>
 
-            <CheckBox Content="{Binding Path=Localization[UseMica]}"
-                      IsChecked="{Binding Settings.UseMica}"
-                      Margin="0,0,0,18" />
+            <TextBlock Text="{Binding Path=Localization[Backdrop]}" FontWeight="SemiBold" />
+            <ComboBox Margin="0,6,0,18"
+                      SelectedValue="{Binding Settings.Backdrop}"
+                      SelectedValuePath="Tag">
+                <ComboBoxItem Content="{Binding Path=Localization[BackdropNone]}" Tag="None" />
+                <ComboBoxItem Content="Mica" Tag="Mica" />
+                <ComboBoxItem Content="{Binding Path=Localization[Acrylic]}" Tag="Acrylic" />
+                <ComboBoxItem Content="Tabbed" Tag="Tabbed" />
+            </ComboBox>
 
             <CheckBox Content="{Binding Path=Localization[AutoRefresh]}"
                       IsChecked="{Binding Settings.AutoRefresh}"

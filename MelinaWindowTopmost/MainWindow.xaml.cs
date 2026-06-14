@@ -2,6 +2,7 @@
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using MelinaWindowTopmost.Models;
 using MelinaWindowTopmost.ViewModels;
 using Wpf.Ui.Controls;
 
@@ -35,7 +36,13 @@ public partial class MainWindow : FluentWindow
     private void ApplyBackdrop()
     {
         ExtendsContentIntoTitleBar = true;
-        WindowBackdropType = _viewModel.Settings.UseMica ? WindowBackdropType.Mica : WindowBackdropType.None;
+        WindowBackdropType = _viewModel.Settings.Backdrop switch
+        {
+            AppBackdrop.Mica => WindowBackdropType.Mica,
+            AppBackdrop.Acrylic => WindowBackdropType.Acrylic,
+            AppBackdrop.Tabbed => WindowBackdropType.Tabbed,
+            _ => WindowBackdropType.None
+        };
     }
 
     private void SettingsButton_Click(object sender, RoutedEventArgs e)
