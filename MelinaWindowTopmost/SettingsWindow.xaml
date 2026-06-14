@@ -50,9 +50,9 @@
                       SelectedValue="{Binding Settings.Backdrop}"
                       SelectedValuePath="Tag">
                 <ComboBoxItem Content="{Binding Path=Localization[BackdropNone]}" Tag="None" />
-                <ComboBoxItem Content="Mica" Tag="Mica" />
-                <ComboBoxItem Content="{Binding Path=Localization[Acrylic]}" Tag="Acrylic" />
-                <ComboBoxItem Content="Tabbed" Tag="Tabbed" />
+                <ComboBoxItem x:Name="MicaBackdropItem" Content="Mica" Tag="Mica" />
+                <ComboBoxItem Content="{Binding AcrylicBackdropText}" Tag="Acrylic" />
+                <ComboBoxItem x:Name="TabbedBackdropItem" Content="Tabbed" Tag="Tabbed" />
             </ComboBox>
 
             <CheckBox Content="{Binding Path=Localization[AutoRefresh]}"

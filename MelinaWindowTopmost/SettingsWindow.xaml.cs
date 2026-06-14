@@ -1,4 +1,5 @@
 using System.Windows;
+using MelinaWindowTopmost.Models;
 using MelinaWindowTopmost.ViewModels;
 
 namespace MelinaWindowTopmost;
@@ -9,6 +10,12 @@ public partial class SettingsWindow : Window
     {
         DataContext = viewModel;
         InitializeComponent();
+        MicaBackdropItem.Visibility = AppBackdropSupport.SupportsMicaAndTabbed
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        TabbedBackdropItem.Visibility = AppBackdropSupport.SupportsMicaAndTabbed
+            ? Visibility.Visible
+            : Visibility.Collapsed;
     }
 
     private void SaveButton_Click(object sender, RoutedEventArgs e)

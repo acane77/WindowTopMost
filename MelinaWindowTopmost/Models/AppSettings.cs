@@ -11,7 +11,7 @@ public sealed partial class AppSettings : ObservableObject
     private AppTheme _theme = AppTheme.System;
 
     [ObservableProperty]
-    private AppBackdrop _backdrop = AppBackdrop.Mica;
+    private AppBackdrop _backdrop = AppBackdropSupport.DefaultBackdrop;
 
     [ObservableProperty]
     private bool _autoRefresh = true;

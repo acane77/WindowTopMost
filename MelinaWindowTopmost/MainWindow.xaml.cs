@@ -36,7 +36,7 @@ public partial class MainWindow : FluentWindow
     private void ApplyBackdrop()
     {
         ExtendsContentIntoTitleBar = true;
-        WindowBackdropType = _viewModel.Settings.Backdrop switch
+        WindowBackdropType = AppBackdropSupport.Normalize(_viewModel.Settings.Backdrop) switch
         {
             AppBackdrop.Mica => WindowBackdropType.Mica,
             AppBackdrop.Acrylic => WindowBackdropType.Acrylic,

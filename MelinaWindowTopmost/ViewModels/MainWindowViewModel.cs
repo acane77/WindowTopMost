@@ -57,6 +57,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         _iconCacheService = iconCacheService;
         _localization = localization;
         Settings = _settingsService.Load();
+        Settings.Backdrop = AppBackdropSupport.Normalize(Settings.Backdrop);
         Settings.PropertyChanged += Settings_PropertyChanged;
         _localization.Apply(Settings.Language);
         ApplyTheme();
@@ -64,6 +65,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     }
 
     public LocalizationService Localization => _localization;
+
+    public string AcrylicBackdropText => TranslateBackdrop(AppBackdrop.Acrylic);
 
     public string T(string key) => _localization.Translate(key);
 
@@ -187,10 +190,12 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     public void SaveSettings()
     {
         Settings.RefreshIntervalSeconds = Math.Clamp(Settings.RefreshIntervalSeconds, 0.5, 10.0);
+        Settings.Backdrop = AppBackdropSupport.Normalize(Settings.Backdrop);
         _settingsService.Save(Settings);
         _localization.Apply(Settings.Language);
         ApplyTheme();
         OnPropertyChanged(nameof(Localization));
+        OnPropertyChanged(nameof(AcrylicBackdropText));
         RestartAutoRefresh();
     }
 
@@ -216,9 +221,25 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         ApplicationThemeManager.Apply(theme, WindowBackdropType.None, updateAccent: true);
     }
 
+    private string TranslateBackdrop(AppBackdrop backdrop)
+    {
+        return backdrop switch
+        {
+            AppBackdrop.None => T("BackdropNone"),
+            AppBackdrop.Mica => "Mica",
+            AppBackdrop.Acrylic => IsWindows7 ? "Aero" : T("Acrylic"),
+            AppBackdrop.Tabbed => "Tabbed",
+            _ => backdrop.ToString()
+        };
+    }
+
     private bool HasSelection() => SelectedWindow is not null;
 
     private bool HasUwpInstallPath() => SelectedWindow?.HasUwpInstallPath == true;
+
+    private static bool IsWindows7 =>
+        OperatingSystem.IsWindowsVersionAtLeast(6, 1) &&
+        !OperatingSystem.IsWindowsVersionAtLeast(6, 2);
 
     private async Task RunWindowActionAsync(Action action)
     {
