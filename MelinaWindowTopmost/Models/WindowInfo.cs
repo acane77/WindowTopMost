@@ -16,6 +16,8 @@ public sealed class WindowInfo
 
     public string ProcessPath { get; init; } = string.Empty;
 
+    public string UwpInstallPath { get; init; } = string.Empty;
+
     public string Description { get; init; } = string.Empty;
 
     public bool IsTopMost { get; init; }

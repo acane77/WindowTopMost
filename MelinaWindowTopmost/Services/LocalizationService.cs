@@ -57,6 +57,7 @@ public sealed class LocalizationService
             ["MenuSetOpacity"] = "设置窗口透明度",
             ["MenuShowInfo"] = "显示信息",
             ["MenuOpenLocation"] = "打开进程位置",
+            ["MenuOpenUwpInstallPath"] = "\u6253\u5f00UWP\u5b89\u88c5\u8def\u5f84",
             ["MenuOpacityHidden"] = "0%（隐藏窗口）",
             ["MenuCustom"] = "自定义..."
         },
@@ -110,6 +111,7 @@ public sealed class LocalizationService
             ["MenuSetOpacity"] = "設定視窗透明度",
             ["MenuShowInfo"] = "顯示資訊",
             ["MenuOpenLocation"] = "開啟行程位置",
+            ["MenuOpenUwpInstallPath"] = "\u958b\u555fUWP\u5b89\u88dd\u8def\u5f91",
             ["MenuOpacityHidden"] = "0%（隱藏視窗）",
             ["MenuCustom"] = "自訂..."
         },
@@ -163,6 +165,7 @@ public sealed class LocalizationService
             ["MenuSetOpacity"] = "ウィンドウの透明度を設定",
             ["MenuShowInfo"] = "情報を表示",
             ["MenuOpenLocation"] = "プロセスの場所を開く",
+            ["MenuOpenUwpInstallPath"] = "UWP\u306e\u30a4\u30f3\u30b9\u30c8\u30fc\u30eb\u30d1\u30b9\u3092\u958b\u304f",
             ["MenuOpacityHidden"] = "0%（ウィンドウを隠す）",
             ["MenuCustom"] = "カスタム..."
         },
@@ -216,6 +219,7 @@ public sealed class LocalizationService
             ["MenuSetOpacity"] = "Set Window Opacity",
             ["MenuShowInfo"] = "Show Information",
             ["MenuOpenLocation"] = "Open Process Location",
+            ["MenuOpenUwpInstallPath"] = "Open UWP Install Path",
             ["MenuOpacityHidden"] = "0% (Hide Window)",
             ["MenuCustom"] = "Custom..."
         }

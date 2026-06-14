@@ -94,6 +94,7 @@ public sealed class WindowEnumerationService
             }
         }
 
+        var icon = _iconCache.GetIcon(hWnd, process, processPath, out string uwpInstallPath);
         WindowInfo info = new()
         {
             Handle = hWnd,
@@ -106,7 +107,8 @@ public sealed class WindowEnumerationService
             IsTopMost = isTopMost,
             OpacityAlpha = alpha,
             HasLayeredOpacity = hasLayeredOpacity,
-            Icon = _iconCache.GetIcon(hWnd, process, processPath)
+            Icon = icon,
+            UwpInstallPath = uwpInstallPath
         };
 
         process?.Dispose();

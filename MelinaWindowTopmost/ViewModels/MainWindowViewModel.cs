@@ -27,6 +27,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     [NotifyCanExecuteChangedFor(nameof(CancelTopMostCommand))]
     [NotifyCanExecuteChangedFor(nameof(SwitchToCommand))]
     [NotifyCanExecuteChangedFor(nameof(OpenLocationCommand))]
+    [NotifyCanExecuteChangedFor(nameof(OpenUwpInstallPathCommand))]
     [NotifyCanExecuteChangedFor(nameof(SetOpacityCommand))]
     [NotifyCanExecuteChangedFor(nameof(ShowInformationCommand))]
     private WindowItemViewModel? _selectedWindow;
@@ -141,6 +142,12 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         RunWindowAction(() => _windowControlService.OpenProcessLocation(SelectedWindow!.Info));
     }
 
+    [RelayCommand(CanExecute = nameof(HasUwpInstallPath))]
+    private void OpenUwpInstallPath()
+    {
+        RunWindowAction(() => _windowControlService.OpenUwpInstallPath(SelectedWindow!.Info));
+    }
+
     [RelayCommand(CanExecute = nameof(HasSelection))]
     private async Task SetOpacityAsync(int? opacityPercent)
     {
@@ -210,6 +217,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     }
 
     private bool HasSelection() => SelectedWindow is not null;
+
+    private bool HasUwpInstallPath() => SelectedWindow?.HasUwpInstallPath == true;
 
     private async Task RunWindowActionAsync(Action action)
     {

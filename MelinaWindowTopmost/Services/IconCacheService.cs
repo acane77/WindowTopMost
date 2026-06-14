@@ -19,7 +19,7 @@ public sealed class IconCacheService
     private const double IconSimilarityThreshold = 0.95;
     private const int UwpIconPaddingPercent = 10;
 
-    private readonly ConcurrentDictionary<string, ImageSource> _cache = new();
+    private readonly ConcurrentDictionary<string, CachedIconResult> _cache = new();
     private readonly bool _isWindows10OrNewer;
     private static readonly Lazy<int[]?> ModernApplicationIconFingerprint = new(CreateModernApplicationIconFingerprint);
     private static readonly Lazy<int[]?> LegacyApplicationIconFingerprint = new(CreateLegacyApplicationIconFingerprint);
@@ -38,20 +38,21 @@ public sealed class IconCacheService
 
     public void Clear() => _cache.Clear();
 
-    public ImageSource? GetIcon(IntPtr hWnd, Process? process, string processPath)
+    public ImageSource? GetIcon(IntPtr hWnd, Process? process, string processPath, out string uwpInstallPath)
     {
         string key = CreateKey(hWnd);
-        if (_cache.TryGetValue(key, out ImageSource? cached))
+        if (_cache.TryGetValue(key, out CachedIconResult? cached))
         {
-            return cached;
+            uwpInstallPath = cached.UwpInstallPath;
+            return cached.Icon;
         }
 
-        using Bitmap? bitmap = GetIconBitmap(hWnd, process, processPath);
+        using Bitmap? bitmap = GetIconBitmap(hWnd, process, processPath, out uwpInstallPath);
         ImageSource? source = bitmap is null ? null : CreateBitmapSource(bitmap);
 
-        if (source is not null)
+        if (source is not null || !string.IsNullOrWhiteSpace(uwpInstallPath))
         {
-            _cache[key] = source;
+            _cache[key] = new CachedIconResult(source, uwpInstallPath);
         }
 
         return source;
@@ -59,15 +60,20 @@ public sealed class IconCacheService
 
     private static string CreateKey(IntPtr hWnd) => $"hwnd:{hWnd.ToInt64():X}";
 
-    private Bitmap? GetIconBitmap(IntPtr hWnd, Process? process, string processPath)
+    private Bitmap? GetIconBitmap(IntPtr hWnd, Process? process, string processPath, out string uwpInstallPath)
     {
+        uwpInstallPath = string.Empty;
         bool isApplicationFrameHost = IsApplicationFrameHost(process, processPath);
         if (_isWindows10OrNewer && isApplicationFrameHost)
         {
-            Bitmap? bitmapUWP = TryGetUwpIcon(hWnd, process);
-            if (bitmapUWP is not null)
+            UwpIconResult? uwpIcon = TryGetUwpIcon(hWnd, process);
+            if (uwpIcon is not null)
             {
-                return bitmapUWP;
+                uwpInstallPath = uwpIcon.InstallPath;
+                if (uwpIcon.Bitmap is not null)
+                {
+                    return uwpIcon.Bitmap;
+                }
             }
         }
 
@@ -79,11 +85,15 @@ public sealed class IconCacheService
 
         if (_isWindows10OrNewer && !isApplicationFrameHost)
         {
-            Bitmap? bitmapUWP = TryGetUwpIcon(hWnd, process);
-            if (bitmapUWP is not null)
+            UwpIconResult? uwpIcon = TryGetUwpIcon(hWnd, process);
+            if (uwpIcon is not null)
             {
-                windowBitmap?.Dispose();
-                return bitmapUWP;
+                uwpInstallPath = uwpIcon.InstallPath;
+                if (uwpIcon.Bitmap is not null)
+                {
+                    windowBitmap?.Dispose();
+                    return uwpIcon.Bitmap;
+                }
             }
         }
 
@@ -167,20 +177,20 @@ public sealed class IconCacheService
         }
     }
 
-    private static Bitmap? TryGetUwpIcon(IntPtr hWnd, Process? fallbackProcess)
+    private static UwpIconResult? TryGetUwpIcon(IntPtr hWnd, Process? fallbackProcess)
     {
-        Bitmap? bitmap = TryGetUwpIconFromWindowProcess(hWnd);
-        bitmap ??= TryGetUwpIconFromChildWindowProcesses(hWnd);
+        UwpIconResult? result = TryGetUwpIconFromWindowProcess(hWnd);
+        result ??= TryGetUwpIconFromChildWindowProcesses(hWnd);
 
-        if (bitmap is not null || fallbackProcess is null)
+        if (result is not null || fallbackProcess is null)
         {
-            return bitmap;
+            return result;
         }
 
         return TryGetUwpIcon(fallbackProcess);
     }
 
-    private static Bitmap? TryGetUwpIconFromWindowProcess(IntPtr hWnd)
+    private static UwpIconResult? TryGetUwpIconFromWindowProcess(IntPtr hWnd)
     {
         IntPtr hProcess = NativeMethods.GetProcessHandleFromHwnd(hWnd);
         if (hProcess == IntPtr.Zero)
@@ -208,7 +218,7 @@ public sealed class IconCacheService
         }
     }
 
-    private static Bitmap? TryGetUwpIconFromChildWindowProcesses(IntPtr hWnd)
+    private static UwpIconResult? TryGetUwpIconFromChildWindowProcesses(IntPtr hWnd)
     {
         HashSet<int> processIds = [];
 
@@ -225,17 +235,17 @@ public sealed class IconCacheService
 
         foreach (int processId in processIds)
         {
-            Bitmap? bitmap = TryGetUwpIcon(processId);
-            if (bitmap is not null)
+            UwpIconResult? result = TryGetUwpIcon(processId);
+            if (result is not null)
             {
-                return bitmap;
+                return result;
             }
         }
 
         return null;
     }
 
-    private static Bitmap? TryGetUwpIcon(Process process)
+    private static UwpIconResult? TryGetUwpIcon(Process process)
     {
         try
         {
@@ -247,7 +257,7 @@ public sealed class IconCacheService
         }
     }
 
-    private static Bitmap? TryGetUwpIcon(int processId)
+    private static UwpIconResult? TryGetUwpIcon(int processId)
     {
         try
         {
@@ -257,29 +267,37 @@ public sealed class IconCacheService
                 return null;
             }
 
-            UWPProcess.AppxApp? app = GetAppForPackage(appxPackage);
-            string? logoPath = GetAppxLogoPath(appxPackage, app);
-            if (logoPath is null)
+            string installPath = appxPackage.Path ?? string.Empty;
+            try
             {
-                return null;
+                UWPProcess.AppxApp? app = GetAppForPackage(appxPackage);
+                string? logoPath = GetAppxLogoPath(appxPackage, app);
+                if (logoPath is null)
+                {
+                    return string.IsNullOrWhiteSpace(installPath) ? null : new UwpIconResult(null, installPath);
+                }
+
+                using Bitmap originalBitmap = new(logoPath);
+                Bitmap bitmapBackground = new(originalBitmap.Width, originalBitmap.Height);
+
+                if (IsMostlyWhite(originalBitmap, 80))
+                {
+                    FillBackgroundColor(bitmapBackground, GetAppxBackgroundColor(app) ?? System.Drawing.Color.FromArgb(255, 128, 128));
+                }
+
+                using (Graphics gr = Graphics.FromImage(bitmapBackground))
+                {
+                    gr.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                    gr.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+                    gr.DrawImage(originalBitmap, GetCenteredPaddedRectangle(originalBitmap.Size));
+                }
+
+                return new UwpIconResult(bitmapBackground, installPath);
             }
-
-            using Bitmap originalBitmap = new(logoPath);
-            Bitmap bitmapBackground = new(originalBitmap.Width, originalBitmap.Height);
-
-            if (IsMostlyWhite(originalBitmap, 80))
+            catch
             {
-                FillBackgroundColor(bitmapBackground, GetAppxBackgroundColor(app) ?? System.Drawing.Color.FromArgb(255, 128, 128));
+                return string.IsNullOrWhiteSpace(installPath) ? null : new UwpIconResult(null, installPath);
             }
-
-            using (Graphics gr = Graphics.FromImage(bitmapBackground))
-            {
-                gr.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                gr.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
-                gr.DrawImage(originalBitmap, GetCenteredPaddedRectangle(originalBitmap.Size));
-            }
-
-            return bitmapBackground;
         }
         catch
         {
@@ -571,4 +589,8 @@ public sealed class IconCacheService
 
     [System.Runtime.InteropServices.DllImport("gdi32.dll")]
     private static extern bool DeleteObject(IntPtr hObject);
+
+    private sealed record CachedIconResult(ImageSource? Icon, string UwpInstallPath);
+
+    private sealed record UwpIconResult(Bitmap? Bitmap, string InstallPath);
 }

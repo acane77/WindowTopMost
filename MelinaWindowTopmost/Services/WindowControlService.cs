@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using MelinaWindowTopmost.Models;
 using MelinaWindowTopmost.Native;
 
@@ -41,6 +42,21 @@ public sealed class WindowControlService
         {
             FileName = "explorer.exe",
             Arguments = $"/select,\"{window.ProcessPath}\"",
+            UseShellExecute = true
+        });
+    }
+
+    public void OpenUwpInstallPath(WindowInfo window)
+    {
+        if (string.IsNullOrWhiteSpace(window.UwpInstallPath) || !Directory.Exists(window.UwpInstallPath))
+        {
+            throw new InvalidOperationException("The selected window does not expose a UWP install path.");
+        }
+
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = "explorer.exe",
+            Arguments = $"\"{window.UwpInstallPath}\"",
             UseShellExecute = true
         });
     }

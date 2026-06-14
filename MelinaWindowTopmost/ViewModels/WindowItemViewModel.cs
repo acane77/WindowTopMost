@@ -27,6 +27,10 @@ public sealed partial class WindowItemViewModel : ObservableObject
 
     public string ProcessPath => Info.ProcessPath;
 
+    public string UwpInstallPath => Info.UwpInstallPath;
+
+    public bool HasUwpInstallPath => !string.IsNullOrWhiteSpace(UwpInstallPath);
+
     public int ProcessId => Info.ProcessId;
 
     public bool IsTopMost => Info.IsTopMost;
@@ -47,6 +51,8 @@ public sealed partial class WindowItemViewModel : ObservableObject
         OnPropertyChanged(nameof(ProcessName));
         OnPropertyChanged(nameof(ProcessFileName));
         OnPropertyChanged(nameof(ProcessPath));
+        OnPropertyChanged(nameof(UwpInstallPath));
+        OnPropertyChanged(nameof(HasUwpInstallPath));
         OnPropertyChanged(nameof(ProcessId));
         OnPropertyChanged(nameof(IsTopMost));
         OnPropertyChanged(nameof(OpacityPercent));

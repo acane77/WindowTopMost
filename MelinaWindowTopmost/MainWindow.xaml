@@ -128,6 +128,9 @@
                                       Click="InformationMenuItem_Click" />
                             <MenuItem Header="{Binding PlacementTarget.DataContext.Localization[MenuOpenLocation], RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                       Click="OpenLocationMenuItem_Click" />
+                            <MenuItem Header="{Binding PlacementTarget.DataContext.Localization[MenuOpenUwpInstallPath], RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                      Visibility="{Binding PlacementTarget.DataContext.SelectedWindow.HasUwpInstallPath, RelativeSource={RelativeSource AncestorType=ContextMenu}, Converter={StaticResource BoolToVisibilityConverter}}"
+                                      Click="OpenUwpInstallPathMenuItem_Click" />
                         </ContextMenu>
                     </ListBox.ContextMenu>
                     <ListBox.ItemContainerStyle>

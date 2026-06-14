@@ -174,6 +174,14 @@ public partial class MainWindow : FluentWindow
         }
     }
 
+    private void OpenUwpInstallPathMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (_viewModel.OpenUwpInstallPathCommand.CanExecute(null))
+        {
+            _viewModel.OpenUwpInstallPathCommand.Execute(null);
+        }
+    }
+
     private void ExecuteOpacityCommand(int opacity)
     {
         int? parameter = opacity;
