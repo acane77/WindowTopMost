@@ -76,7 +76,7 @@
         </Grid>
 
         <Border Grid.Row="2"
-                Margin="12,0,12,12"
+                Margin="0"
                 Background="{DynamicResource ControlFillColorDefaultBrush}"
                 BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
                 BorderThickness="1">
@@ -198,7 +198,7 @@
                         <DataTemplate DataType="{x:Type vm:WindowItemViewModel}">
                             <Border MinHeight="46"
                                     Margin="0">
-                            <Grid Margin="4,3">
+                            <Grid Margin="10,3,4,3">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="40" />
                                     <ColumnDefinition Width="*" />
